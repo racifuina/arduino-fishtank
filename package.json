@@ -1,0 +1,39 @@
+{
+    "name": "arduino-fishtank",
+    "version": "1.0.0",
+    "description": "arduino based fishtank control",
+    "main": "server.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node server.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/racifuina/arduino-fishtank.git"
+    },
+    "author": "Rigoberto Acifuina",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/racifuina/arduino-fishtank/issues"
+    },
+    "homepage": "https://github.com/racifuina/arduino-fishtank#readme",
+    "dependencies": {
+        "bcrypt": "*",
+        "body-parser": "*",
+        "connect-flash": "*",
+        "connect-mongo": "*",
+        "cron": "*",
+        "dotenv": "*",
+        "ejs": "*",
+        "express": "*",
+        "express-session": "*",
+        "express-socket.io-session": "*",
+        "moment-timezone": "*",
+        "mongoose": "*",
+        "nodemailer": "*",
+        "nodemailer-smtp-transport": "*",
+        "passport": "*",
+        "passport-local": "*",
+        "socket.io": "*"
+    }
+}

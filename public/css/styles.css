@@ -1,0 +1,377 @@
+.below-navbar {
+    margin-top: 51px;
+}
+
+.datepicker-dropdown:before {
+    display: none;
+}
+
+.datepicker-dropdown:after {
+    display: none;
+}
+
+.search {
+    border-radius: 25px;
+    padding: 7px 14px;
+    background-color: transparent;
+    border: solid 1px rgba(0, 0, 0, 0.2);
+    min-width: 100%;
+    box-sizing: border-box;
+    color: #2e2e2e;
+    margin-bottom: 5px;
+}
+
+.search:focus {
+    outline: none;
+}
+
+.item-list:hover .fa {
+    color: #222;
+}
+
+.hover-red:hover {
+    color: red;
+}
+
+.item-list:hover .fa-trash-o:hover {
+    color: red;
+}
+
+.item-list:hover .fa-pencil:hover {
+    color: dodgerblue;
+}
+
+.fa {
+    color: lightgray
+}
+
+.fa-black {
+    color: black
+}
+
+.wrapper {
+    position: fixed;
+    z-index: 1000;
+    right: 0;
+    left: 0;
+    background: white;
+    border-bottom: 1px solid #eee;
+}
+
+.list {
+    padding-top: 131px;
+}
+
+@media (max-width: 767px) {
+    .list {
+        padding-top: 161px;
+    }
+
+    .wrapper {
+        position: absolute;
+    }
+}
+
+.company {
+    color: gray;
+}
+
+.name {
+    font-size: 18px;
+}
+
+.alarma {
+    font-size: 10px;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.alarma img {
+    /*    margin-left: 10px;*/
+}
+
+.checkbox-button-success.active:hover {
+    color: white;
+    background: #5cb85c;
+    border-color: #5cb85c;
+}
+
+.checkbox-button-success.active {
+    color: white;
+    background: #5cb85c;
+    border-color: #5cb85c;
+}
+
+.checkbox-button-success {
+    color: #333;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+#graph-holder {
+    min-height: 450px;
+}
+
+#graph-legend {
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    top: 0px;
+    bottom: 350px;
+}
+
+#grafica {
+    position: absolute;
+    left: 10px;
+    right: 20px;
+    top: 50px;
+    bottom: 0px;
+}
+
+.cut-text {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.checkbox-button-level.active:hover {
+    outline: none;
+    color: white;
+    background: #9C27B0;
+    border-color: #9C27B0;
+}
+
+.checkbox-button-level.active {
+    outline: none;
+    color: white;
+    background: #9C27B0;
+    border-color: #9C27B0;
+}
+
+.checkbox-button-level.active.focus {
+    outline: none;
+    color: white;
+    background: #9C27B0;
+    border-color: #9C27B0;
+}
+
+.checkbox-button-level {
+    outline: none;
+    color: #9C27B0;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+.checkbox-button-level.focus {
+    outline: none;
+    color: #9C27B0;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+.checkbox-button-level:focus {
+    outline: none;
+    color: #9C27B0;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+.checkbox-button-level:hover {
+    outline: none;
+    color: #9C27B0;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+/*pressure*/
+
+.checkbox-button-pressure.active:hover {
+    outline: none;
+    color: white;
+    background: #2979FF;
+    border-color: #2979FF;
+}
+
+.checkbox-button-pressure.active {
+    outline: none;
+    color: white;
+    background: #2979FF;
+    border-color: #2979FF;
+}
+
+.checkbox-button-pressure.active.focus {
+    outline: none;
+    color: white;
+    background: #2979FF;
+    border-color: #2979FF;
+}
+
+.checkbox-button-pressure {
+    outline: none;
+    color: #2979FF;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+.checkbox-button-pressure.focus {
+    outline: none;
+    color: #2979FF;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+.checkbox-button-pressure:focus {
+    outline: none;
+    color: #2979FF;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+.checkbox-button-pressure:hover {
+    outline: none;
+    color: #2979FF;
+    background-color: #fff;
+    border-color: #ccc;
+}
+
+#legend-div {
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    top: 0px;
+    bottom: 350px;
+}
+
+#legend-div > span.highlight {
+    border: 1px solid grey;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+@keyframes yellowfade {
+    from {
+        background: yellow;
+    }
+
+    to {
+        background: transparent;
+    }
+}
+
+.item-highlight {
+    animation: yellowfade 3s;
+}
+
+.with-alarm {
+    background: #FFCDD2;
+    color: red;
+}
+
+.alarm-icon {
+    margin-right: 8px;
+    margin-left: 8px;
+}
+
+/* tables */
+
+table.tablesorter thead tr .header {
+    background-image: url(bg.gif);
+    background-repeat: no-repeat;
+    background-position: center right;
+    cursor: pointer;
+}
+
+table.tablesorter thead tr .headerSortUp {
+    background-image: url(asc.gif);
+}
+
+table.tablesorter thead tr .headerSortDown {
+    background-image: url(desc.gif);
+}
+
+.search-label {
+    max-width: 100px;
+}
+
+.btn {
+    outline: none;
+}
+
+.btn:active {
+    outline: none !important;
+}
+
+.btn:enabled {
+    outline: none;
+}
+
+.btn:target {
+    outline: none;
+}
+
+.btn:focus {
+    outline: none;
+}
+
+#piechart-holder {
+    background: #F2F2F2;
+    margin-top: 15px;
+    height: calc(50vh - 50px);
+    min-height: 220px;
+    padding: 1px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    border-color: darkorange;
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+}
+
+#piechart {
+    height: 100%;
+    background: #F2F2F2;
+}
+
+#alarms {
+    background: #F2F2F2;
+    margin-top: 15px;
+    height: calc(50vh - 50px);
+    min-height: 220px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    border-color: darkorange;
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+}
+
+#map {
+    background: #F2F2F2;
+    margin-top: 15px;
+    height: calc(50vh - 50px);
+    min-height: 220px;
+    padding: 1px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    border-color: darkorange;
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+}
+
+#location-list {
+    overflow-y: scroll;
+    max-height: calc(100% - 26px);
+}
+
+
+.comment-input:focus {
+    outline: none;
+}
+
+.comment-input {
+    background: transparent;
+    border: none;
+    width: 100%;
+    height: 34px;
+    font-size: 14px;
+    color: #555;
+    border-bottom: solid 1px rgba(0, 0, 0, 0.2);
+}
