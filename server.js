@@ -213,7 +213,9 @@ net.createServer(connection => {
 
         console.log(replyDate);
 
-        connection.write(replyDate);
+         setTimeout(function () {
+            connection.write(replyDate);
+        }, 750);
     });
 
 }).listen(TCP_PORT, function () {
