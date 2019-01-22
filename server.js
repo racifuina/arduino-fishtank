@@ -212,19 +212,18 @@ net.createServer(connection => {
         let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
 
         console.log(replyDate);
+        connection.write("datos\r\n");
 
-        connection.write("0\r\n");
 
-        setTimeout(function () {
-            connection.write("1\r\n");
-        }, 750);
+    });
 
-        setTimeout(function () {
-            connection.write("2\r\n");
-        }, 750 * 2);
-        setTimeout(function () {
-            connection.write("3\r\n");
-        }, 750 * 3);
+    connection.on("close", hadError => {
+        console.log("device disconnected hadError", hadError);
+    });
+
+    connection.on("error", error => {
+        console.log("device error", error);
+
     });
 
 }).listen(TCP_PORT, function () {
