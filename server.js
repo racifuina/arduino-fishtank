@@ -216,6 +216,12 @@ net.createServer(connection => {
          setTimeout(function () {
             connection.write(replyDate);
         }, 750);
+        setTimeout(function () {
+            connection.write(replyDate);
+        }, 750 * 2);
+        setTimeout(function () {
+            connection.write(replyDate);
+        }, 750 * 3);
     });
 
 }).listen(TCP_PORT, function () {
