@@ -214,13 +214,13 @@ net.createServer(connection => {
         console.log(replyDate);
 
          setTimeout(function () {
-            connection.write(replyDate);
+            connection.write(replyDate + "\r\n");
         }, 750);
         setTimeout(function () {
-            connection.write(replyDate);
+            connection.write(replyDate + "\r\n");
         }, 750 * 2);
         setTimeout(function () {
-            connection.write(replyDate);
+            connection.write(replyDate + "\r\n");
         }, 750 * 3);
     });
 
