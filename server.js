@@ -131,26 +131,26 @@ app.use(customSession);
 app.use(passport.initialize());
 app.use(passport.session());
 
-io.use(sharedsession(customSession));
-io.use((socket, next) => {
-    if (socket.handshake.session.passport) {
-        User.findById(socket.handshake.session.passport.user).then(user => {
-            if (user) {
-                socket.user = user;
-                next();
-            } else {
-                socket.disconnect(true);
-            }
-        }, function (error) {
-            socket.disconnect(true);
-        });
-    } else {
-        socket.disconnect(true);
-    }
-});
+//io.use(sharedsession(customSession));
+//io.use((socket, next) => {
+//    if (socket.handshake.session.passport) {
+//        User.findById(socket.handshake.session.passport.user).then(user => {
+//            if (user) {
+//                socket.user = user;
+//                next();
+//            } else {
+//                socket.disconnect(true);
+//            }
+//        }, function (error) {
+//            socket.disconnect(true);
+//        });
+//    } else {
+//        socket.disconnect(true);
+//    }
+//});
 
 io.on("connection", socket => {
-
+    console.log("socket connected")
 });
 
 function requireAuthentication(req, res, next) {
@@ -188,6 +188,10 @@ app.get('/', function (req, res) {
     return res.sendFile(__dirname + '/views/dashboard.html');
 });
 
+app.get('/monitor', function (req, res) {
+    return res.sendFile(__dirname + '/views/monitor.html');
+});
+
 app.get('*', function (req, res) {
     return res.sendFile(__dirname + '/views/http_errors/404.html');
 });
@@ -201,33 +205,32 @@ app.use((err, req, res, next) => {
     }
 });
 
-net.createServer(connection => {
+function newLog(log) {
+    io.emit("newLog", log)
+}
 
-    console.log("device connected");
+net.createServer(connection => {
+    newLog("device connected");
 
     connection.on("data", buffer => {
-
-        console.log(buffer.toString());
-
+        newLog(buffer.toString());
         let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
-
-        console.log(replyDate);
-        connection.write("datos\r\n");
-
-
+        newLog(replyDate)
+        connection.write(replyDate);
     });
 
     connection.on("close", hadError => {
         console.log("device disconnected hadError", hadError);
+        newLog("device disconnected");
     });
 
     connection.on("error", error => {
         console.log("device error", error);
-
+        newLog("device error");
     });
 
 }).listen(TCP_PORT, function () {
-    console.log(' - ThermoAlert+ TCP Server Started on ' + TCP_PORT + ' :)');
+    console.log(' - TCP Server Started on port ' + TCP_PORT + ' :)');
 });
 
 http.listen(HTTP_PORT, function () {
