@@ -213,9 +213,11 @@ net.createServer(connection => {
     newLog("device connected");
 
     connection.on("data", buffer => {
-        newLog(buffer.toString());
-        newLog("OK")
-        connection.write("OK");
+        newLog("<b>Device: " + buffer.toString() + "</b>");
+        let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
+
+        newLog("OK" + replyDate)
+        connection.write("OK" + replyDate);
 
         setTimeout(function () {
             let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
