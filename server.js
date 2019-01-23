@@ -214,10 +214,14 @@ net.createServer(connection => {
 
     connection.on("data", buffer => {
         newLog(buffer.toString());
-        let replyDate = "OK"
-//        let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
-        newLog(replyDate)
-        connection.write(replyDate);
+        newLog("OK")
+        connection.write("OK");
+
+        setTimeout(function () {
+            let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
+            newLog(replyDate)
+            connection.write(replyDate);
+        }, 500)
     });
 
     connection.on("close", hadError => {
