@@ -214,7 +214,8 @@ net.createServer(connection => {
 
     connection.on("data", buffer => {
         newLog(buffer.toString());
-        let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
+        let replyDate = "OK"
+//        let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
         newLog(replyDate)
         connection.write(replyDate);
     });
