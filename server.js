@@ -34,7 +34,7 @@ const smtpTransport = nodemailer.createTransport(smtpTransportRequire({
         pass: process.env.EMAIL_PASS
     }
 }));
-4
+
 const User = require("./models/User");
 const Record = require("./models/Record");
 
@@ -72,7 +72,7 @@ passport.serializeUser(function (user, done) {
 });
 
 passport.deserializeUser(function (userId, done) {
-    User.findById(userId, 'name userType _id email permissions settings', function (err, user) {
+    User.findById(userId, function (err, user) {
         done(err, user);
     });
 });
@@ -120,7 +120,7 @@ const customSession = session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 2592000000, // 30 días
+        maxAge: 2592000000,
     },
     store: new MongoStore({
         mongooseConnection: db
@@ -130,24 +130,6 @@ const customSession = session({
 app.use(customSession);
 app.use(passport.initialize());
 app.use(passport.session());
-
-//io.use(sharedsession(customSession));
-//io.use((socket, next) => {
-//    if (socket.handshake.session.passport) {
-//        User.findById(socket.handshake.session.passport.user).then(user => {
-//            if (user) {
-//                socket.user = user;
-//                next();
-//            } else {
-//                socket.disconnect(true);
-//            }
-//        }, function (error) {
-//            socket.disconnect(true);
-//        });
-//    } else {
-//        socket.disconnect(true);
-//    }
-//});
 
 io.on("connection", socket => {
     console.log("socket connected")
@@ -164,9 +146,22 @@ function requireAuthentication(req, res, next) {
 };
 
 app.get('/login', function (req, res) {
-    res.render(__dirname + '/views/authentication/login.html', {
-        message: req.flash('message'),
-        error: req.flash('error')
+    User.countDocuments().then(userCount => {
+        if (userCount > 0) {
+            res.render(__dirname + '/views/authentication/login.html', {
+                message: req.flash('message'),
+                error: req.flash('error')
+            });
+        } else {
+            res.render(__dirname + '/views/authentication/newuser.html', {
+                message: req.flash('message'),
+                error: req.flash('error')
+            });
+        }
+    }, error => {
+        console.log(error);
+        res.status(500);
+        return res.sendFile(__dirname + '/views/http_errors/500.html');
     });
 });
 
@@ -177,6 +172,24 @@ app.post('/login', passport.authenticate('local', {
     failureFlash: true
 }));
 
+app.post('/user', (req, res) => {
+    User.countDocuments().then(userCount => {
+        if (userCount > 0) {
+            res.status(500);
+            return res.sendFile(__dirname + '/views/http_errors/500.html');
+        } else {
+            new User(req.body).save().then(user => {
+                req.flash('message', "Usuario Creado Exitosamente")
+                res.redirect("/login")
+            });
+        }
+    }, error => {
+        console.log(error);
+        res.status(500);
+        return res.sendFile(__dirname + '/views/http_errors/500.html');
+    });
+});
+
 app.get('/logout', function (req, res) {
     if (req.isAuthenticated()) {
         req.logout();
@@ -184,7 +197,7 @@ app.get('/logout', function (req, res) {
     res.redirect('/login');
 });
 
-app.get('/', function (req, res) {
+app.get('/', requireAuthentication, function (req, res) {
     return res.sendFile(__dirname + '/views/dashboard.html');
 });
 
@@ -197,9 +210,11 @@ app.get('*', function (req, res) {
 });
 
 app.use((err, req, res, next) => {
+    console.log(err)
     if (res.headersSent) {
         return next(err)
     } else {
+        console.log(err)
         res.status(500);
         return res.sendFile(__dirname + '/views/http_errors/500.html');
     }

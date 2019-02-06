@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html class="dark-backgroud">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <title>miPecera.online || Inicio de sesión</title>
+
+    <link rel="stylesheet" href="/css/bootstrap.css">
+    <link rel="stylesheet" href="/css/floating-labels.css">
+
+    <link rel="apple-touch-icon" sizes="57x57" href="/images/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/images/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/images/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/images/apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="/images/apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="/images/apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/images/apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
+    <link rel="manifest" href="/images/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="/images/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+    <style>
+        .container-fluid {
+            min-height: 100vh;
+            background: #222;
+        }
+        .well{
+            position: absolute;
+            top: 25%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-4 col-lg-offset-4 col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 col-xs-12 well">
+                <h3>
+                    <center>Inicio de Sesión</center>
+                </h3>
+                <br>
+                <!--<% if (error.length) { %>-->
+                <div class="alert alert-danger" role="alert">
+                    <center>
+                        <%= error %>
+                    </center>
+                </div>
+                <!--<% } %>-->
+
+                <!--<% if (message.length) { %>-->
+                <div class="alert alert-warning" role="alert">
+                    <center>
+                        <%= message %>
+                    </center>
+                </div>
+                <!--<% } %>-->
+
+                <form class="form" action="/login" method="post">
+                    <div class="form-group floating-label-form-group floating-label-form-group-with-value">
+                        <label for="username" class="titulo">Correo electrónico</label>
+                        <input type="email" id="email" name="email" class="form-control" autocomplete="off" autofocus />
+                    </div>
+                    <div class="form-group floating-label-form-group floating-label-form-group-with-value">
+                        <label for="password" class="titulo">Contraseña</label>
+                        <input type="password" id="password" name="password" class="form-control" autocomplete="off" />
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <input style="background: #90C84B; border-color: #90C84B;" type="submit" value="Entrar" class="btn btn-success btn-block btn-lg" />
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

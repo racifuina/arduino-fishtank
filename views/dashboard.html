@@ -36,6 +36,9 @@
                 <a href="/" class="navbar-brand"><img height="50" src="/images/mipeceralogo.svg" style="margin-top: -15px"> </a>
                 <a href="/" class="navbar-brand">miPecera.online</a>
             </div>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/logout" style="color: orangered;">Cerrar sesión</a></li>
+            </ul>
         </div>
     </nav>
 
@@ -77,8 +80,9 @@
                         <h3 class="panel-title text-center">Alimentación</h3>
                     </div>
                     <div class="panel-body">
+                        <br>
                         <div class="text-center">
-                            <p class="text-center varela-font" style="color:gray">Automatic mode</p>
+                            <p class="text-center varela-font" style="color:gray">Modo Automatico</p>
                             <div class="btn-group btn-group-justified " data-toggle="buttons">
                                 <label class="btn btn-primary" data-toggle="tooltip" title="Sunday" data-container="body">
                                     <input type="checkbox" name="options" id="option1" autocomplete="off">S
@@ -104,71 +108,14 @@
                             </div>
                         </div>
                         <br>
+                        <p class="text-center varela-font" style="color:gray">Modo Manual</p>
                         <div class="text-center">
-                            <small>Time:</small>
-                            <div class="btn-group dropup">
-                                <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    00:00 <span class="caret"></span>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a onclick="setTime(this, 1)">00:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">01:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">02:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">03:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">04:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">05:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">06:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">07:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">08:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">09:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">10:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">11:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">12:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">13:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">14:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">15:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">16:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">17:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">18:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">19:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">20:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">21:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">22:00</a></li>
-                                    <li><a onclick="setTime(this, 1)">23:00</a></li>
-                                </ul>
-                            </div>
-                            <!--                            </div>-->
-                            <!--                            <div class="text-center">-->
-                            <small style="padding-left:8px;">Length:</small>
-                            <div class="btn-group dropup">
-                                <button type="button" class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    5 minutes <span class="caret"></span>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a onclick="setLength(5, 1)">5 minutes</a></li>
-                                    <li><a onclick="setLength(10, 1)">10 minutes</a></li>
-                                    <li><a onclick="setLength(15, 1)">15 minutes</a></li>
-                                    <li><a onclick="setLength(20, 1)">20 minutes</a></li>
-                                    <li><a onclick="setLength(25, 1)">25 minutes</a></li>
-                                    <li><a onclick="setLength(25, 1)">30 minutes</a></li>
-                                    <li><a onclick="setLength(35, 1)">35 minutes</a></li>
-                                    <li><a onclick="setLength(40, 1)">40 minutes</a></li>
-                                    <li><a onclick="setLength(45, 1)">45 minutes</a></li>
-                                    <li><a onclick="setLength(50, 1)">50 minutes</a></li>
-                                    <li><a onclick="setLength(55, 1)">55 minutes</a></li>
-                                    <li><a onclick="setLength(60, 1)">60 minutes</a></li>
-                                </ul>
-                            </div>
-                        </div>
 
-                        <br>
-                        <p class="text-center varela-font" style="color:gray">Manual mode</p>
-                        <div class="text-center">
-                            <div class="btn-group btn-group-lg btn-group-justified" role="group" aria-label="...">
-                                <a type="button" class="btn btn-success" data-toggle="tooltip" title="Open Valve" data-container="body" onclick="manualOpen(1)">Open</a>
-                                <a type="button" class="btn btn-danger" data-toggle="tooltip" title="Close Valve" data-container="body" onclick="manualClose(1)">Close</a>
+                            <div class="btn-group btn-group-lg " role="group" aria-label="...">
+                                <a type="button" class="btn btn-success" data-toggle="tooltip" title="Open Valve" data-container="body" onclick="feed(1)">Alimentar Ahora</a>
                             </div>
                         </div>
+                        <br>
                     </div>
                 </div>
             </div>
