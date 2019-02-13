@@ -227,6 +227,11 @@ net.createServer(connection => {
 
         newLog("<b>Device: " + buffer.toString().trim() + "</b>");
 
+
+        if (buffer.toString().trim().includes("AT+CIPSEND")) {
+            return connection.destroy();
+        }
+
         let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
 
         newLog("OK" + replyDate);
