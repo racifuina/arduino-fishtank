@@ -252,8 +252,8 @@ net.createServer(connection => {
             lastRecord.date = moment(new Date()).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
         }
 
-        newLog("FEED" + replyDate);
-        connection.write("FEED" + replyDate);
+        newLog("FEED");
+        connection.write("FEED");
 
 //        setTimeout(function () {
 //
