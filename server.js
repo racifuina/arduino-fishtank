@@ -27,7 +27,7 @@ const CronJob = require('cron').CronJob;
 mongoose.Promise = global.Promise;
 
 let lastRecord = {
-    date: new Date(),
+    date: moment(new Date()).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm"),
     ph: 0,
     temp: 0
 }
@@ -249,7 +249,7 @@ net.createServer(connection => {
         if (sensorData.P && sensorData.T) {
             lastRecord.ph = parseFloat(sensorData.P)
             lastRecord.temp = parseFloat(sensorData.T)
-            lastRecord.date = replyDate;
+            lastRecord.date = moment(new Date()).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
         }
 
         newLog("OK" + replyDate);
