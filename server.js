@@ -144,6 +144,18 @@ function requireAuthentication(req, res, next) {
     }
 };
 
+app.get('/data', function (req, res) {
+
+    newLog("<b>HTTP Device: " + req.query + "</b>");
+
+    let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
+
+    newLog("OK" + replyDate);
+
+    res.send("OK" + replyDate);
+});
+
+
 app.get('/login', function (req, res) {
     User.countDocuments().then(userCount => {
         if (userCount > 0) {
