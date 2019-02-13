@@ -26,6 +26,12 @@ const smtpTransportRequire = require("nodemailer-smtp-transport");
 const CronJob = require('cron').CronJob;
 mongoose.Promise = global.Promise;
 
+let lastRecord = {
+    date: new Date(),
+    ph: 0,
+    temp: 0
+}
+
 const smtpTransport = nodemailer.createTransport(smtpTransportRequire({
     service: 'gmail',
     auth: {
@@ -196,7 +202,11 @@ app.get('/logout', function (req, res) {
 });
 
 app.get('/', requireAuthentication, function (req, res) {
-    return res.sendFile(__dirname + '/views/dashboard.html');
+    return res.render(__dirname + '/views/dashboard.html', {
+        message: req.flash('message'),
+        error: req.flash('error'),
+        lastRecord: lastRecord
+    });
 });
 
 app.get('/monitor', function (req, res) {
@@ -221,10 +231,9 @@ function newLog(log) {
 }
 
 net.createServer(connection => {
-    newLog("device connected");
+    newLog("<div style='color: green;'>device CONNECTED</div>");
 
     connection.on("data", buffer => {
-
         newLog("<b>Device: " + buffer.toString().trim() + "</b>");
 
 
@@ -232,10 +241,18 @@ net.createServer(connection => {
             return connection.destroy();
         }
 
+
         let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
 
-        newLog("OK" + replyDate);
+        let sensorData = JSON.parse(buffer.toString().trim());
 
+        if (sensorData.P && sensorData.T) {
+            lastRecord.ph = parseFloat(sensorData.P)
+            lastRecord.temp = parseFloat(sensorData.T)
+            lastRecord.date = replyDate;
+        }
+
+        newLog("OK" + replyDate);
         connection.write("OK" + replyDate);
 
         setTimeout(function () {
@@ -247,18 +264,12 @@ net.createServer(connection => {
             connection.write(replyDate);
 
         }, 500);
-
     });
 
     connection.on("close", hadError => {
-        console.log("device disconnected hadError", hadError);
-        newLog("device disconnected");
+        newLog("<div style='color: red;'>device DISCONNECTED</div>");
     });
 
-    connection.on("error", error => {
-        console.log("device error", error);
-        newLog("device error");
-    });
 
 }).listen(TCP_PORT, function () {
     console.log(' - TCP Server Started on port ' + TCP_PORT + ' :)');

@@ -1,0 +1,211 @@
+#include <Servo.h>
+#include <Wire.h>
+#include <DS3231.h>
+#include <SoftwareSerial.h>
+#include "ESP8266.h"
+
+int ph_pin = A2; // -> PIN de lectura de la sonda.
+int ThermistorPin = A0; // -> PIN de lectura de sensor de Temperatura.
+
+int SERVO_PIN = 9; // -> PIN de lectura de sensor de Temperatura.
+int Vo;
+float R1 = 10000;
+float logR2, R2, T;
+float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
+Servo myservo;
+DS3231 clock;
+RTCDateTime dt;
+
+#define SSID        "Naboo"
+#define PASSWORD    "f6eb902f72"
+#define HOST_NAME   "3.87.250.63"
+#define HOST_PORT   (3000)
+
+String HOST = "3.87.250.63";
+String PORT = "3000";
+
+int countTrueCommand;
+int countTimeCommand; 
+boolean found = false; 
+
+SoftwareSerial mySerial(4, 5);
+ESP8266 wifi(mySerial);
+
+void setup() {
+  Serial.begin(9600);
+  myservo.attach(SERVO_PIN);
+  feed();
+  clock.begin();
+  //clock.setDateTime(__DATE__, __TIME__); // Set sketch compiling time 
+  Serial.print("TIME: ");
+  dt = clock.getDateTime();
+  Serial.println(clock.dateFormat("d-m-Y H:i:s", dt));
+  initWifi();
+}
+
+void loop() {
+  float Po = (1023 - analogRead(ph_pin)); //lectura analogica de la sonda (voltaje).
+  float pHm = map(Po, 290, 406, 400, 700); //Conversión del valor obtenido del sensor en voltaje a nivel de pH.
+  float pH = (pHm/100);
+  
+  Vo = analogRead(ThermistorPin);
+  R2 = R1 * (1023.0 / (float)Vo - 1.0);
+  logR2 = log(R2);
+  T = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2));
+  T = T - 273.15;
+  sendData();
+  
+  uint8_t buffer[128] = {0};
+  uint32_t len = wifi.recv(buffer, sizeof(buffer), 1000);
+  
+  Serial.print("len: ");
+  Serial.println(len);
+  
+  if (len > 0) {
+    Serial.print("received: ");
+    for (uint32_t i = 0; i < len; i++) {
+      Serial.print((char)buffer[i]);
+    }
+    Serial.print("\r\n");
+  }
+  sendCommand("AT+CIPCLOSE=0",5,"OK");
+  delay(1000);
+}
+
+void feed() {
+  myservo.write(180);
+  delay(1500);
+  myservo.write(0);
+}
+
+
+void connectTCPServer() {
+
+  Serial.print("*********************\r\n");
+  Serial.print("TCP SERVER CONNECTION\r\n");
+  Serial.print("*********************\r\n");
+
+  if (wifi.createTCP(HOST_NAME, HOST_PORT)) {
+    Serial.print("- CREATE TCP OK!\r\n");
+    delay(500);
+  } else {
+    Serial.print("- CREATE TCP ERROR!\r\n");
+    delay(500);
+  }
+  
+  Serial.print("*********************\r\n");
+  Serial.print("\r\n");
+  
+}
+  
+void disconnectTCPServer() {
+  
+  Serial.print("************************\r\n");
+  Serial.print("TCP SERVER DISCONNECTION\r\n");
+  Serial.print("************************\r\n");
+
+  if (wifi.releaseTCP()) {
+    Serial.print("- RELEASE TCP OK!\r\n");
+    delay(500);
+  } else {
+    Serial.print("- RELEASE TCP ER!\r\n");
+    delay(500);
+  }
+  Serial.print("************************\r\n");
+  Serial.print("\r\n");
+
+}
+
+void initWifi() {
+  
+  if (wifi.restart()) {
+    Serial.print("- RESTART SUCCESS!\r\n");
+  } else {
+    Serial.print("- RESTART FAILURE!\r\n");
+  }
+  
+  if (wifi.kick()) {
+    Serial.print("- KICK SUCCESS!\r\n");
+  } else {
+    Serial.print("- KICK FAILURE!\r\n");
+  }
+    
+  if (wifi.joinAP(SSID, PASSWORD)) {
+    Serial.print("**********************\r\n");
+    Serial.print("- JOIN AP SUCCESS!\r\n");
+  } else {
+    Serial.print("**********************\r\n");
+    Serial.print("- JOIN AP FAILURE!\r\n");
+  }
+  
+  if (wifi.enableMUX()) {
+    Serial.print("- SINGLE CONNECTION OK\r\n");
+  } else {
+    Serial.print("- SINGLE CONNECTION ER\r\n");
+  }
+  
+  //connectTCPServer();
+  
+  Serial.print("- SETUP END\r\n");
+  Serial.print("**********************\r\n");
+  
+}
+
+void sendData() {
+  /*
+   * Serial.print("SENDING DATA\r\n");
+  char *hello = "CADENA DE PRUEBA\r\n";
+  int longitud = strlen(hello) + 4;
+  
+  if (wifi.send((const uint8_t*)hello, longitud)) {
+    Serial.print("- DATA SEND SUCCESS!\r\n");
+  } else {
+    Serial.print("- DATA SEND ERROR!\r\n");  
+    mySerial.print("                    ");
+    initWifi();
+  }
+  
+  */
+  String getData = "CADENA DE PRUEBA";
+  sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
+  sendCommand("AT+CIPSEND=0," +String(getData.length()+4),4,">");
+  
+  sendCommand(getData,5,"OK");
+  delay(1500);
+  countTrueCommand++;
+  
+}
+
+void sendCommand(String command, int maxTime, char readReplay[]) {
+  Serial.print(countTrueCommand);
+  Serial.print(". at command => ");
+  Serial.print(command);
+  Serial.print(" ");
+
+  while (countTimeCommand < (maxTime*1)) {
+    mySerial.println(command);//at+cipsend
+    if(mySerial.find(readReplay)) {
+      found = true;
+      break;
+    } 
+  
+    countTimeCommand++;
+  }
+  
+  if (found == true) {
+    Serial.println("OYI");
+    countTrueCommand++;
+    countTimeCommand = 0;
+  }
+  
+  if (found == false) {
+    Serial.println("Fail");
+    countTrueCommand = 0;
+    countTimeCommand = 0;
+  }
+  
+  found = false;
+ }
+
+
+

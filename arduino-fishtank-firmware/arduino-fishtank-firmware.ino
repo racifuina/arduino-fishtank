@@ -1,13 +1,11 @@
 #include <Servo.h>
-#include <Wire.h>//Libreria encargada de manejar la comunicación I2C con la pantalla.
 #include <DS3231.h>
 #include <SoftwareSerial.h>
-#include "ESP8266.h"
 
-int ph_pin = A2; // A2 -> PIN de lectura de la sonda (Analogico 2).
+int ph_pin = A2; // -> PIN de lectura de la sonda.
+int ThermistorPin = A0; // -> PIN de lectura de sensor de Temperatura.
 
-int SERVO_PIN = 9;
-int ThermistorPin = 0;
+int SERVO_PIN = 9; // -> PIN de lectura de sensor de Temperatura.
 int Vo;
 float R1 = 10000;
 float logR2, R2, T;
@@ -16,26 +14,31 @@ Servo myservo;
 DS3231 clock;
 RTCDateTime dt;
 
-#define SSID        "Naboo"
-#define PASSWORD    "f6eb902f72"
-#define HOST_NAME   "157.230.159.39"
-#define HOST_PORT   (3180)
+String AP = "Naboo";
+String PASS = "f6eb902f72";
+String HOST = "3.87.250.63";
+String PORT = "3000";
 
-SoftwareSerial mySerial(4, 5);
-ESP8266 wifi(mySerial);
+int countTimeCommand;
+boolean found = false;
+
+SoftwareSerial esp8266(4, 5);
+
 
 void setup() {
+  Serial.begin(9600);
+  esp8266.begin(115200);
   myservo.attach(SERVO_PIN);
-  myservo.write(0);
+  feed();
   clock.begin();
   //clock.setDateTime(__DATE__, __TIME__); // Set sketch compiling time
-  // Manual (Year, Month, Day, Hour, Minute, Second)
-  clock.setDateTime(1992, 1, 31, 0, 0, 0);
-
-  Serial.begin(9600);
-
-
-  delay(1000);
+  Serial.print("TIME: ");
+  dt = clock.getDateTime();
+  Serial.println(clock.dateFormat("d-m-Y H:i:s", dt));
+  sendCommand("AT+RST",5,"OK");
+  sendCommand("AT",5,"OK");
+  sendCommand("AT+CWJAP=\""+ AP +"\",\""+ PASS +"\"",20,"OK");
+  sendCommand("AT+CIPMUX=1",5,"OK");
 }
 
 void loop() {
@@ -49,16 +52,24 @@ void loop() {
   T = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2));
   T = T - 273.15;
 
-  Serial.print("{\"t\": \"");
-  Serial.print(T);
-  Serial.print("\"}");
-  Serial.println("");
+  String getData = "{\"T\":\"" + String(T) + "\",\"P\":\"" + String(pH) + "\"}";
 
-  dt = clock.getDateTime();
-  Serial.println(dt.hour);
+  sendCommand("AT+CIPSTATUS",5,"STATUS");
+  sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
+  sendCommand("AT+CIPSEND=0," +String(getData.length()+2),4,">");
+  sendCommand(getData, 5,"OK");
 
-//  Serial.println(clock.dateFormat("H", dt));
-  delay(1000);
+  if (esp8266.available()) {
+    int serialLength = esp8266.available();
+    char message[serialLength];
+    for (int pos = 0; pos < serialLength; pos++) {
+      message[pos] = esp8266.read();
+    }
+    message[esp8266.available()] = 0;
+    Serial.print("Serial: ");
+    Serial.println( message);
+  }
+  delay(2000);
 }
 
 void feed() {
@@ -67,26 +78,31 @@ void feed() {
   myservo.write(0);
 }
 
-void connectTCPServer() {
-  Serial.print("TCP SERVER CONNECTION\r\n");
+void sendCommand(String command, int maxTime, char readReply[]) {
+  Serial.print("Command => ");
+  Serial.print(command);
+  Serial.print(" ");
 
-  if (wifi.createTCP(HOST_NAME, HOST_PORT)) {
-    Serial.print("- CREATE TCP OK!\r\n");
-    delay(500);
-  } else {
-    Serial.print("- CREATE TCP ERROR!\r\n");
-    delay(500);
+  while (countTimeCommand < maxTime) {
+    esp8266.println(command);
+
+    if (esp8266.find(readReply)) {
+      found = true;
+      break;
+    }
+
+    countTimeCommand++;
   }
-}
 
-void disconnectTCPServer() {
-  Serial.print("TCP SERVER DISCONNECTION\r\n");
-
-  if (wifi.releaseTCP()) {
-    Serial.print("- RELEASE TCP OK!\r\n");
-    delay(500);
-  } else {
-    Serial.print("- RELEASE TCP ER!\r\n");
-    delay(500);
+  if (found == true) {
+    Serial.println("Success");
+    countTimeCommand = 0;
   }
+
+  if (found == false) {
+    Serial.println("Fail");
+    countTimeCommand = 0;
+  }
+
+  found = false;
 }
