@@ -57,6 +57,7 @@ void loop() {
   sendCommand("AT+CIPSTATUS",5,"STATUS");
   sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
   sendCommand("AT+CIPSEND=0," +String(getData.length()+2),4,">");
+  delay(1000);
   sendCommand(getData, 5,"OK");
 
   if (esp8266.available()) {
@@ -82,8 +83,9 @@ void sendCommand(String command, int maxTime, char readReply[]) {
   Serial.print("Command => ");
   Serial.print(command);
   Serial.print(" ");
-
   while (countTimeCommand < maxTime) {
+
+
     esp8266.println(command);
 
     if (esp8266.find(readReply)) {
