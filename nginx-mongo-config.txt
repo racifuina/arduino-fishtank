@@ -1,0 +1,31 @@
+sudo rm mipecera.online.conf
+
+sudo nano mipecera.online.conf
+
+server {
+       listen 80;
+       server_name mipecera.online;
+       return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name mipecera.online;
+    ssl_certificate     /etc/letsencrypt/live/mipecera.online/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/mipecera.online/privkey.pem;
+    ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+mongo admin --eval 'db.createUser({user: "dbadmin",pwd: "kgfh8g87hs89g2g",roles: [{role: "root",db: "admin"}]});'
+
+mongo mipecera --authenticationDatabase admin -u dbadmin -p kgfh8g87hs89g2g --eval 'db.createUser({user: "webapp@mipecera.online",pwd: "mnbhubt8pahñb9a34",roles: [{role: "readWrite",db: "mipecera"}]});'

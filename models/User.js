@@ -23,7 +23,6 @@ UserSchema.methods.validatePassword = function (candidatePassword, callback) {
         } else {
             callback(isMatch);
         }
-
     });
 }
 

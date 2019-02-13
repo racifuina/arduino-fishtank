@@ -15,7 +15,6 @@ const express = require("express");
 const app = express();
 const http = require("http").Server(app);
 const io = require("socket.io")(http);
-const querystring = require('querystring');
 const net = require('net');
 const moment = require('moment-timezone');
 const fs = require('fs');
@@ -159,7 +158,6 @@ app.get('/login', function (req, res) {
             });
         }
     }, error => {
-        console.log(error);
         res.status(500);
         return res.sendFile(__dirname + '/views/http_errors/500.html');
     });
@@ -210,11 +208,9 @@ app.get('*', function (req, res) {
 });
 
 app.use((err, req, res, next) => {
-    console.log(err)
     if (res.headersSent) {
         return next(err)
     } else {
-        console.log(err)
         res.status(500);
         return res.sendFile(__dirname + '/views/http_errors/500.html');
     }
@@ -228,17 +224,25 @@ net.createServer(connection => {
     newLog("device connected");
 
     connection.on("data", buffer => {
+
         newLog("<b>Device: " + buffer.toString() + "</b>");
+
         let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
 
-        newLog("OK" + replyDate)
+        newLog("OK" + replyDate);
+
         connection.write("OK" + replyDate);
 
         setTimeout(function () {
+
             let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
-            newLog(replyDate)
+
+            newLog(replyDate);
+
             connection.write(replyDate);
-        }, 500)
+
+        }, 500);
+
     });
 
     connection.on("close", hadError => {

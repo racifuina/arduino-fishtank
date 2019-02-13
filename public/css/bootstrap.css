@@ -143,13 +143,7 @@ input::-moz-focus-inner {
 input {
   line-height: normal;
 }
-input[type="checkbox"],
-input[type="radio"] {
-  -webkit-box-sizing: border-box;
-     -moz-box-sizing: border-box;
-          box-sizing: border-box;
-  padding: 0;
-}
+
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   height: auto;
@@ -1065,17 +1059,7 @@ th {
 .glyphicon-menu-up:before {
   content: "\e260";
 }
-* {
-  -webkit-box-sizing: border-box;
-     -moz-box-sizing: border-box;
-          box-sizing: border-box;
-}
-*:before,
-*:after {
-  -webkit-box-sizing: border-box;
-     -moz-box-sizing: border-box;
-          box-sizing: border-box;
-}
+
 html {
   font-size: 10px;
 
@@ -1144,10 +1128,8 @@ img {
   border-radius: 50%;
 }
 hr {
-/*
   margin-top: 20px;
   margin-bottom: 20px;
-*/
   border: 0;
   border-top: 1px solid #eee;
 }
@@ -1502,7 +1484,7 @@ blockquote .small:before {
 }
 .blockquote-reverse,
 blockquote.pull-right {
-/*  padding-right: 15px;*/
+  padding-right: 15px;
   padding-left: 0;
   text-align: right;
   border-right: 5px solid #eee;
@@ -2265,7 +2247,7 @@ th {
 .table {
   width: 100%;
   max-width: 100%;
-/*  margin-bottom: 20px;*/
+  margin-bottom: 20px;
 }
 .table > thead > tr > th,
 .table > tbody > tr > th,
@@ -2448,10 +2430,10 @@ table th[class*="col-"] {
 @media screen and (max-width: 767px) {
   .table-responsive {
     width: 100%;
-/*    margin-bottom: 15px;*/
+    margin-bottom: 15px;
     overflow-y: hidden;
     -ms-overflow-style: -ms-autohiding-scrollbar;
-/*    border: 1px solid #ddd;*/
+    border: 1px solid #ddd;
   }
   .table-responsive > .table {
     margin-bottom: 0;
@@ -2513,11 +2495,7 @@ label {
   margin-bottom: 5px;
   font-weight: bold;
 }
-input[type="search"] {
-  -webkit-box-sizing: border-box;
-     -moz-box-sizing: border-box;
-          box-sizing: border-box;
-}
+
 input[type="radio"],
 input[type="checkbox"] {
   margin: 4px 0 0;
@@ -2633,7 +2611,6 @@ input[type="search"] {
 .form-group {
   margin-bottom: 15px;
 }
-
 .radio,
 .checkbox {
   position: relative;
@@ -2916,13 +2893,11 @@ select[multiple].input-lg {
   color: #737373;
 }
 @media (min-width: 768px) {
-
   .form-inline .form-group {
     display: inline-block;
     margin-bottom: 0;
     vertical-align: middle;
   }
-
   .form-inline .form-control {
     display: inline-block;
     width: auto;
@@ -3068,9 +3043,9 @@ fieldset[disabled] a.btn {
 }
 .btn-default:focus,
 .btn-default.focus {
-  color: #fff;
+  color: #333;
   background-color: #e6e6e6;
-  border-color: #adadad;
+  border-color: #8c8c8c;
 }
 .btn-default:hover {
   color: #333;
@@ -3080,7 +3055,7 @@ fieldset[disabled] a.btn {
 .btn-default:active,
 .btn-default.active,
 .open > .dropdown-toggle.btn-default {
-  color: #ffffff;
+  color: #333;
   background-color: #e6e6e6;
   border-color: #adadad;
 }
@@ -5220,7 +5195,7 @@ a.thumbnail.active {
 }
 .media-right,
 .media > .pull-right {
-/*  padding-left: 10px;*/
+  padding-left: 10px;
 }
 .media-left,
 .media > .pull-left {
@@ -5453,14 +5428,16 @@ button.list-group-item-danger.active:focus {
   line-height: 1.3;
 }
 .panel {
+  margin-bottom: 20px;
   background-color: #fff;
   border: 1px solid transparent;
   border-radius: 4px;
   -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
           box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
 }
-
-
+.panel-body {
+  padding: 15px;
+}
 .panel-heading {
   padding: 10px 15px;
   border-bottom: 1px solid transparent;
@@ -5670,6 +5647,7 @@ button.list-group-item-danger.active:focus {
   border-radius: 4px;
 }
 .panel-group .panel + .panel {
+  margin-top: 5px;
 }
 .panel-group .panel-heading {
   border-bottom: 0;
@@ -5904,12 +5882,6 @@ button.close {
   width: auto;
   margin: 10px;
 }
-
-.modal-confirmation {
-  position: relative;
-  width: auto;
-  margin: 90px;
-}
 .modal-content {
   position: relative;
   background-color: #fff;
@@ -5981,11 +5953,6 @@ button.close {
     width: 600px;
     margin: 30px auto;
   }
-
-  .modal-confirmation {
-    width: 600px;
-    margin: 90px auto;
-  }
   .modal-content {
     -webkit-box-shadow: 0 5px 15px rgba(0, 0, 0, .5);
             box-shadow: 0 5px 15px rgba(0, 0, 0, .5);
@@ -5997,12 +5964,6 @@ button.close {
 @media (min-width: 992px) {
   .modal-lg {
     width: 900px;
-  }
-}
-
-@media (min-width: 1280px) {
-  .modal-lg {
-    width: 1250px;
   }
 }
 .tooltip {
