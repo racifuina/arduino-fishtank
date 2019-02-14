@@ -194,6 +194,20 @@ app.post('/user', (req, res) => {
     });
 });
 
+app.get('/data', function (req, res) {
+     newLog("<b>HTTP Device: " + req.query + "</b>");
+     newLog("FEED_HTTP");
+     res.send("FEED_HTTP");
+});
+
+app.get('/logout', function (req, res) {
+    if (req.isAuthenticated()) {
+        req.logout();
+    }
+    res.redirect('/login');
+});
+
+
 app.get('/logout', function (req, res) {
     if (req.isAuthenticated()) {
         req.logout();
@@ -256,7 +270,7 @@ net.createServer(connection => {
             newLog("FEED");
             connection.write("FEED");
 
-        }, 30);
+        }, 500);
     });
 
     connection.on("close", hadError => {
