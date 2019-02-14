@@ -195,7 +195,7 @@ app.post('/user', (req, res) => {
 });
 
 app.get('/data', function (req, res) {
-    newLog("<b>HTTP Device: " + req.query + "</b>");
+    newLog("<b>HTTP Device: " + JSON.stringify(req.query) + "</b>");
 
     res.removeHeader('Content-Type');
     res.removeHeader('X-Powered-By');
