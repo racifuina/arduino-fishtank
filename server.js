@@ -15,7 +15,6 @@ const express = require("express");
 const app = express();
 const http = require("http").Server(app);
 const io = require("socket.io")(http);
-const net = require('net');
 const moment = require('moment-timezone');
 const fs = require('fs');
 const ejs = require('ejs');
@@ -25,7 +24,7 @@ const nodemailer = require("nodemailer");
 const smtpTransportRequire = require("nodemailer-smtp-transport");
 const CronJob = require('cron').CronJob;
 mongoose.Promise = global.Promise;
-
+let mustFeed = false;
 let lastRecord = {
     date: moment(new Date()).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm"),
     ph: 0,
@@ -138,6 +137,13 @@ app.use(passport.session());
 
 io.on("connection", socket => {
     console.log("socket connected")
+
+    socket.on("feedNow", response => {
+        mustFeed = true
+        response(true)
+    });
+
+
 });
 
 function requireAuthentication(req, res, next) {
@@ -197,6 +203,14 @@ app.post('/user', (req, res) => {
 app.get('/data', function (req, res) {
     newLog("<b>HTTP Device: " + JSON.stringify(req.query) + "</b>");
 
+    let sensorData = JSON.stringify(req.query);
+
+    if (sensorData.P && sensorData.T) {
+        lastRecord.ph = parseFloat(sensorData.P)
+        lastRecord.temp = parseFloat(sensorData.T)
+        lastRecord.date = moment(new Date()).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
+    }
+
     res.removeHeader('Content-Type');
     res.removeHeader('X-Powered-By');
     res.removeHeader('Content-Length');
@@ -204,7 +218,12 @@ app.get('/data', function (req, res) {
     res.removeHeader('ETag');
     res.removeHeader('Date');
     res.removeHeader('Connection');
-    res.end("FEED_HTTP");
+
+    if (mustFeed) {
+        res.end("FEED");
+    } else {
+        res.end("TIME=YNNNNNYNNNNNNYNNNNNNYNN");
+    }
 
 });
 
@@ -251,44 +270,6 @@ app.use((err, req, res, next) => {
 function newLog(log) {
     io.emit("newLog", log)
 }
-
-net.createServer(connection => {
-    newLog("<div style='color: green;'>device CONNECTED</div>");
-
-    connection.on("data", buffer => {
-        newLog("<b>Device: " + buffer.toString().trim() + "</b>");
-
-
-        if (buffer.toString().trim().includes("AT+CIPSEND")) {
-            return connection.destroy();
-        }
-
-
-        let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
-
-        let sensorData = JSON.parse(buffer.toString().trim());
-
-        if (sensorData.P && sensorData.T) {
-            lastRecord.ph = parseFloat(sensorData.P)
-            lastRecord.temp = parseFloat(sensorData.T)
-            lastRecord.date = moment(new Date()).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
-        }
-
-        setTimeout(function () {
-            newLog("FEED");
-            connection.write("FEED");
-
-        }, 500);
-    });
-
-    connection.on("close", hadError => {
-        newLog("<div style='color: red;'>device DISCONNECTED</div>");
-    });
-
-
-}).listen(TCP_PORT, function () {
-    console.log(' - TCP Server Started on port ' + TCP_PORT + ' :)');
-});
 
 http.listen(HTTP_PORT, function () {
     console.log(" - Web Server Started :)");
