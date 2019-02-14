@@ -93,11 +93,15 @@ void sendCommand(String command, int maxTime, char readReply[]) {
     delay(20);
     esp8266.println(command);
     delay(200);
-    if (esp8266.find(readReply) || esp8266.find("ALREADY") {
+    if (esp8266.find(readReply) || esp8266.find("ALREADY")) {
       found = true;
       break;
     }
     countTimeCommand++;
+  }
+
+  if (esp8266.find("FEED")) {
+    feed();
   }
 
   if (found == true) {

@@ -195,9 +195,15 @@ app.post('/user', (req, res) => {
 });
 
 app.get('/data', function (req, res) {
-     newLog("<b>HTTP Device: " + req.query + "</b>");
-     newLog("FEED_HTTP");
-     res.send("FEED_HTTP");
+    newLog("<b>HTTP Device: " + req.query + "</b>");
+
+    res.removeHeader('Content-Type');
+    res.removeHeader('X-Powered-By');
+    res.removeHeader('Content-Length');
+    res.removeHeader('ETag');
+    res.removeHeader('Date');
+    res.removeHeader('Connection');
+    res.end("FEED_HTTP");
 });
 
 app.get('/logout', function (req, res) {
