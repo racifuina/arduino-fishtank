@@ -252,18 +252,11 @@ net.createServer(connection => {
             lastRecord.date = moment(new Date()).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
         }
 
-        newLog("FEED");
-        connection.write("FEED");
+        setTimeout(function () {
+            newLog("FEED");
+            connection.write("FEED");
 
-//        setTimeout(function () {
-//
-//            let replyDate = moment(new Date()).tz('America/Guatemala').format("YY-MM-DD,HH:mm:ss");
-//
-//            newLog(replyDate);
-//
-//            connection.write(replyDate);
-//
-//        }, 500);
+        }, 30);
     });
 
     connection.on("close", hadError => {

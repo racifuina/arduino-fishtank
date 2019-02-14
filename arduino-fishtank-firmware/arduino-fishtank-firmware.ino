@@ -35,40 +35,46 @@ void setup() {
   Serial.print("TIME: ");
   dt = clock.getDateTime();
   Serial.println(clock.dateFormat("d-m-Y H:i:s", dt));
-  sendCommand("AT+RST",5,"OK");
-  sendCommand("AT",5,"OK");
-  sendCommand("AT+CWJAP=\""+ AP +"\",\""+ PASS +"\"",20,"OK");
-  sendCommand("AT+CIPMUX=1",5,"OK");
+  sendCommand("AT+RST", 5, "OK");
+  sendCommand("AT", 5, "OK");
+  sendCommand("AT+CWJAP=\"" + AP + "\",\"" + PASS + "\"", 20, "OK");
+  sendCommand("AT+CIPMUX=0", 5, "OK");
+  sendCommand("AT+CIPMODE=0", 5, "OK");
+  sendCommand("AT+CIPSTART=\"TCP\",\"" + HOST + "\"," + PORT, 15, "OK");
 }
 
 void loop() {
   float Po = (1023 - analogRead(ph_pin)); //lectura analogica de la sonda (voltaje).
   float pHm = map(Po, 290, 406, 400, 700); //Conversión del valor obtenido del sensor en voltaje a nivel de pH.
-  float pH = (pHm/100);
+  float pH = (pHm / 100);
 
   Vo = analogRead(ThermistorPin);
   R2 = R1 * (1023.0 / (float)Vo - 1.0);
   logR2 = log(R2);
-  T = (1.0 / (c1 + c2*logR2 + c3*logR2*logR2*logR2));
+  T = (1.0 / (c1 + c2 * logR2 + c3 * logR2 * logR2 * logR2));
   T = T - 273.15;
 
-  String getData = "{\"T\":\"" + String(T) + "\",\"P\":\"" + String(pH) + "\"}";
+  String dataString = "{\"T\":\"" + String(T) + "\",\"P\":\"" + String(pH) + "\"}";
 
-  sendCommand("AT+CIPSTATUS",5,"STATUS");
-  sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
-  sendCommand("AT+CIPSEND=0," +String(getData.length()+2),4,">");
+  sendCommand("AT+CIPSEND=" + String(dataString.length() + 2),4,"SEND OK");
   delay(1000);
-  sendCommand(getData, 5,"OK");
+  sendCommand(dataString, 5, "OK");
 
   if (esp8266.available()) {
+    Serial.print("Serial available (");
+    Serial.print(esp8266.available());
+    Serial.print("): ");
     int serialLength = esp8266.available();
     char message[serialLength];
     for (int pos = 0; pos < serialLength; pos++) {
       message[pos] = esp8266.read();
     }
-    message[esp8266.available()] = 0;
+    //    message[esp8266.available()] = 0;
     Serial.print("Serial: ");
     Serial.println( message);
+  } else {
+    sendCommand("AT+CIPCLOSE", 5, "OK");
+    sendCommand("AT+CIPSTART=\"TCP\",\"" + HOST + "\"," + PORT, 15, "OK");
   }
   delay(2000);
 }
@@ -84,15 +90,13 @@ void sendCommand(String command, int maxTime, char readReply[]) {
   Serial.print(command);
   Serial.print(" ");
   while (countTimeCommand < maxTime) {
-
-
+    delay(20);
     esp8266.println(command);
-
-    if (esp8266.find(readReply)) {
+    delay(200);
+    if (esp8266.find(readReply) || esp8266.find("ALREADY") {
       found = true;
       break;
     }
-
     countTimeCommand++;
   }
 
