@@ -204,7 +204,7 @@ app.get('/data', function (req, res) {
     res.removeHeader('ETag');
     res.removeHeader('Date');
     res.removeHeader('Connection');
-    res.send("FEED_HTTP");
+    res.end("FEED_HTTP");
 
 });
 
