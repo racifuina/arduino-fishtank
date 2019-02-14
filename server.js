@@ -200,10 +200,12 @@ app.get('/data', function (req, res) {
     res.removeHeader('Content-Type');
     res.removeHeader('X-Powered-By');
     res.removeHeader('Content-Length');
+    res.removeHeader('Transfer-Encoding');
     res.removeHeader('ETag');
     res.removeHeader('Date');
     res.removeHeader('Connection');
-    res.end("FEED_HTTP");
+    res.send("FEED_HTTP");
+
 });
 
 app.get('/logout', function (req, res) {
