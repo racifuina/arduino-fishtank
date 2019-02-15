@@ -247,24 +247,20 @@ app.get('/data', function (req, res) {
         let lastFeed = moment.tz(savedObj.time, "DDMMYYHHmm", "America/Guatemala")
         lastRecord.lastFeed = moment(lastFeed).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
     }
-    //
-    //    res.removeHeader('Content-Type');
-    //    res.removeHeader('X-Powered-By');
-    //    res.removeHeader('Content-Length');
-    //    res.removeHeader('Transfer-Encoding');
-    //    res.removeHeader('ETag');
-    //    res.removeHeader('Date');
-    //    res.removeHeader('Connection');
-    res.json({
-        feed: true
-    });
 
+    res.removeHeader('Content-Type');
+    res.removeHeader('X-Powered-By');
+    res.removeHeader('Content-Length');
+    res.removeHeader('Transfer-Encoding');
+    res.removeHeader('ETag');
+    res.removeHeader('Date');
+    res.removeHeader('Connection');
 
-    //    if (mustFeed) {
-    //        res.end("FEED");
-    //    } else {
-    //        res.end("TIME=YNNNNNYNNNNNNYNNNNNNYNN");
-    //    }
+    if (mustFeed) {
+        res.end("FEED");
+    } else {
+        res.end("TIME=YNNNNNYNNNNNNYNNNNNNYNN");
+    }
 
 });
 
