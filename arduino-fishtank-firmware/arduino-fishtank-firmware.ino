@@ -17,7 +17,7 @@ RTCDateTime dt;
 String AP = "Naboo";
 String PASS = "f6eb902f72";
 String HOST = "3.87.250.63";
-String PORT = "3000";
+String PORT = "8080";
 
 int countTimeCommand;
 boolean found = false;
@@ -40,7 +40,6 @@ void setup() {
   sendCommand("AT+CWJAP=\"" + AP + "\",\"" + PASS + "\"", 20, "OK");
   sendCommand("AT+CIPMUX=0", 5, "OK");
   sendCommand("AT+CIPMODE=0", 5, "OK");
-  sendCommand("AT+CIPSTART=\"TCP\",\"" + HOST + "\"," + PORT, 15, "OK");
 }
 
 void loop() {
@@ -53,29 +52,10 @@ void loop() {
   logR2 = log(R2);
   T = (1.0 / (c1 + c2 * logR2 + c3 * logR2 * logR2 * logR2));
   T = T - 273.15;
-
-  String dataString = "{\"T\":\"" + String(T) + "\",\"P\":\"" + String(pH) + "\"}";
-
-  sendCommand("AT+CIPSEND=" + String(dataString.length() + 2),4,"SEND OK");
-  delay(1000);
-  sendCommand(dataString, 5, "OK");
-
-  if (esp8266.available()) {
-    Serial.print("Serial available (");
-    Serial.print(esp8266.available());
-    Serial.print("): ");
-    int serialLength = esp8266.available();
-    char message[serialLength];
-    for (int pos = 0; pos < serialLength; pos++) {
-      message[pos] = esp8266.read();
-    }
-    //    message[esp8266.available()] = 0;
-    Serial.print("Serial: ");
-    Serial.println( message);
-  } else {
-    sendCommand("AT+CIPCLOSE", 5, "OK");
-    sendCommand("AT+CIPSTART=\"TCP\",\"" + HOST + "\"," + PORT, 15, "OK");
-  }
+  sendCommand("AT+CIPSTART=\"TCP\",\"" + HOST + "\"," + PORT, 5, "OK");
+  String dataString = "GET /data?T=" + String(T) + "&P=" + String(pH) + " HTTP/1.1";
+  sendCommand("AT+CIPSEND=" + String(dataString.length() + 4),5,"OK");
+  sendData(dataString, 5, "SEND OK");
   delay(2000);
 }
 
@@ -89,10 +69,12 @@ void sendCommand(String command, int maxTime, char readReply[]) {
   Serial.print("Command => ");
   Serial.print(command);
   Serial.print(" ");
+  delay(20);
+  esp8266.println(command);
+  delay(200);
+
   while (countTimeCommand < maxTime) {
-    delay(20);
-    esp8266.println(command);
-    delay(200);
+
     if (esp8266.find(readReply) || esp8266.find("ALREADY")) {
       found = true;
       break;
@@ -100,9 +82,58 @@ void sendCommand(String command, int maxTime, char readReply[]) {
     countTimeCommand++;
   }
 
-  if (esp8266.find("FEED")) {
-    feed();
+  if (found == true) {
+    Serial.println("Success");
+    countTimeCommand = 0;
   }
+
+  if (found == false) {
+    Serial.println("Fail");
+    countTimeCommand = 0;
+  }
+
+  found = false;
+}
+
+void sendData(String command, int maxTime, char readReply[]) {
+  Serial.print("DATA => ");
+  Serial.print(command);
+  Serial.print(" ");
+
+  esp8266.println(command);
+  esp8266.println("");
+  delay(200);
+
+  while (countTimeCommand < maxTime) {
+    if (esp8266.find(readReply)) {
+      found = true;
+      break;
+    }
+    esp8266.println("");
+    countTimeCommand++;
+    delay(20);
+  }
+   Serial.print(" RESPONSE: ");
+   while(esp8266.available()) {
+     char t = esp8266.read();
+      Serial.print(t);
+   }
+   Serial.println("");
+
+  /*if (esp8266.find("FEED")) {
+    feed();
+  } else if(esp8266.find("TIME")) {
+    while(esp8266.available()) {
+      Serial.print(esp8266.read());
+    }
+    Serial.println("");
+  } else {
+    Serial.print("NO RESPONSE");
+    while(esp8266.available()) {
+      Serial.print(esp8266.read());
+    }
+  }
+  */
 
   if (found == true) {
     Serial.println("Success");

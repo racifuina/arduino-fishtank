@@ -25,11 +25,48 @@ const smtpTransportRequire = require("nodemailer-smtp-transport");
 const CronJob = require('cron').CronJob;
 mongoose.Promise = global.Promise;
 let mustFeed = false;
+let currentSettings = {
+    feedSchedule: {
+        h00: false,
+        h01: false,
+        h02: false,
+        h03: false,
+        h04: false,
+        h05: false,
+        h06: false,
+        h07: false,
+        h08: false,
+        h09: false,
+        h10: false,
+        h11: false,
+        h12: false,
+        h13: false,
+        h14: false,
+        h15: false,
+        h16: false,
+        h17: false,
+        h18: false,
+        h19: false,
+        h20: false,
+        h21: false,
+        h22: false,
+        h23: false,
+    },
+    ph: {
+        min: 4,
+        max: 8
+    },
+    temp: {
+        min: 15,
+        max: 35
+    }
+};
+
 let lastRecord = {
-    date: moment(new Date()).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm"),
+    date: "--",
     ph: 0,
     temp: 0
-}
+};
 
 const smtpTransport = nodemailer.createTransport(smtpTransportRequire({
     service: 'gmail',
@@ -142,8 +179,6 @@ io.on("connection", socket => {
         mustFeed = true
         response(true)
     });
-
-
 });
 
 function requireAuthentication(req, res, next) {
@@ -209,21 +244,27 @@ app.get('/data', function (req, res) {
         lastRecord.ph = parseFloat(sensorData.P)
         lastRecord.temp = parseFloat(sensorData.T)
         lastRecord.date = moment(new Date()).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
+        let lastFeed = moment.tz(savedObj.time, "DDMMYYHHmm", "America/Guatemala")
+        lastRecord.lastFeed = moment(lastFeed).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
     }
+    //
+    //    res.removeHeader('Content-Type');
+    //    res.removeHeader('X-Powered-By');
+    //    res.removeHeader('Content-Length');
+    //    res.removeHeader('Transfer-Encoding');
+    //    res.removeHeader('ETag');
+    //    res.removeHeader('Date');
+    //    res.removeHeader('Connection');
+    res.json({
+        feed: true
+    });
 
-    res.removeHeader('Content-Type');
-    res.removeHeader('X-Powered-By');
-    res.removeHeader('Content-Length');
-    res.removeHeader('Transfer-Encoding');
-    res.removeHeader('ETag');
-    res.removeHeader('Date');
-    res.removeHeader('Connection');
 
-    if (mustFeed) {
-        res.end("FEED");
-    } else {
-        res.end("TIME=YNNNNNYNNNNNNYNNNNNNYNN");
-    }
+    //    if (mustFeed) {
+    //        res.end("FEED");
+    //    } else {
+    //        res.end("TIME=YNNNNNYNNNNNNYNNNNNNYNN");
+    //    }
 
 });
 
@@ -248,6 +289,52 @@ app.get('/', requireAuthentication, function (req, res) {
         error: req.flash('error'),
         lastRecord: lastRecord
     });
+});
+
+app.get('/settings', requireAuthentication, function (req, res) {
+    return res.render(__dirname + '/views/settings.html', {
+        message: req.flash('message'),
+        error: req.flash('error'),
+        currentSettings: currentSettings,
+        lastRecord: lastRecord
+    });
+});
+
+app.post('/settings', requireAuthentication, function (req, res) {
+
+    currentSettings.temp.min = parseFloat(req.body.temp.min);
+    currentSettings.temp.max = parseFloat(req.body.temp.max);
+
+    currentSettings.ph.min = parseFloat(req.body.ph.min);
+    currentSettings.ph.max = parseFloat(req.body.ph.max);
+
+    currentSettings.feedSchedule.h00 = (req.body.h00 == "true");
+    currentSettings.feedSchedule.h01 = (req.body.h01 == "true");
+    currentSettings.feedSchedule.h02 = (req.body.h02 == "true");
+    currentSettings.feedSchedule.h03 = (req.body.h03 == "true");
+    currentSettings.feedSchedule.h04 = (req.body.h04 == "true");
+    currentSettings.feedSchedule.h05 = (req.body.h05 == "true");
+    currentSettings.feedSchedule.h06 = (req.body.h06 == "true");
+    currentSettings.feedSchedule.h07 = (req.body.h07 == "true");
+    currentSettings.feedSchedule.h08 = (req.body.h08 == "true");
+    currentSettings.feedSchedule.h09 = (req.body.h09 == "true");
+    currentSettings.feedSchedule.h10 = (req.body.h10 == "true");
+    currentSettings.feedSchedule.h11 = (req.body.h11 == "true");
+    currentSettings.feedSchedule.h12 = (req.body.h12 == "true");
+    currentSettings.feedSchedule.h13 = (req.body.h13 == "true");
+    currentSettings.feedSchedule.h14 = (req.body.h14 == "true");
+    currentSettings.feedSchedule.h15 = (req.body.h15 == "true");
+    currentSettings.feedSchedule.h16 = (req.body.h16 == "true");
+    currentSettings.feedSchedule.h17 = (req.body.h17 == "true");
+    currentSettings.feedSchedule.h18 = (req.body.h18 == "true");
+    currentSettings.feedSchedule.h19 = (req.body.h19 == "true");
+    currentSettings.feedSchedule.h20 = (req.body.h20 == "true");
+    currentSettings.feedSchedule.h21 = (req.body.h21 == "true");
+    currentSettings.feedSchedule.h22 = (req.body.h22 == "true");
+    currentSettings.feedSchedule.h23 = (req.body.h23 == "true");
+
+    req.flash('message', "Sus cambios se han guardado exitosamente");
+    res.redirect('/settings');
 });
 
 app.get('/monitor', function (req, res) {

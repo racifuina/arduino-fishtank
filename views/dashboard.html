@@ -85,14 +85,14 @@
             <div class="collapse navbar-collapse" id="navbar-options">
 
                 <ul class="nav navbar-nav navbar-right">
-                    <li><a href="/">Configuración</a></li>
+                    <li><a href="/settings">Configuración</a></li>
                     <li><a href="/logout" style="color: orangered;">Cerrar sesión</a></li>
                 </ul>
 
             </div>
         </div>
     </nav>
-    <div class="container-fluid" style="margin-top: 75px;">
+    <div class="container" style="margin-top: 75px;">
 
         <div class="row">
             <div class="col-xs-12 col-sm-6">
@@ -102,7 +102,8 @@
                     </div>
                     <div class="panel-body">
                         <center>
-                            <h1 id="temp-value"><%= lastRecord.temp %> ºC</h1>
+                            <h1 id="temp-value">
+                                <%= lastRecord.temp %> ºC</h1>
                         </center>
                     </div>
                 </div>
@@ -114,7 +115,8 @@
                     </div>
                     <div class="panel-body">
                         <center>
-                            <h1 id="ph-value"><%= lastRecord.ph %> pH</h1>
+                            <h1 id="ph-value">
+                                <%= lastRecord.ph %> pH</h1>
                         </center>
                     </div>
                 </div>
@@ -123,7 +125,8 @@
         <div class="row">
             <div class="col-xs-12">
                 <center>
-                    <p>última actualización: <b id="date-value"><%= lastRecord.date %></b></p>
+                    <p>Última actualización: <b id="date-value">
+                            <%= lastRecord.date %></b></p>
                 </center>
             </div>
         </div>
@@ -135,132 +138,10 @@
                         <h3 class="panel-title text-center">Alimentación</h3>
                     </div>
                     <div class="panel-body">
-                        <p class="text-center" style="color:gray">Modo Automático AM</p>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>00:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>01:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>02:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>03:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>04:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>05:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>06:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>07:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>08:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>09:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>10:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>11:00
-                            </label>
-                        </div>
-                        <p class="text-center" style="color:gray">Modo Automático PM</p>
-
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>12:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>13:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>14:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>15:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>16:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>17:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>18:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>19:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>20:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>21:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>22:00
-                            </label>
-                        </div>
-                        <div class='btn-group col-xs-4 col-sm-3 col-md-2 col-lg-1' data-toggle='buttons' style='margin-bottom: 6px;'>
-                            <label class='btn checkbox-button btn-block active'>
-                                <input type='checkbox' checked>23:00
-                            </label>
-                        </div>
-                        <br>
-                        <br>
-                        <br>
+                        <center>
+                            <p>Última alimentación: <b id="feed-date">
+                                    <%= lastRecord.date %></b></p>
+                        </center>
                         <br>
                         <p class="text-center" style="color:gray">Modo Manual</p>
                         <div class='col-xs-12 col-sm-offset-3 col-sm-6 col-md-offset-2 col-md-8 col-lg-offset-1 col-lg-10'>
