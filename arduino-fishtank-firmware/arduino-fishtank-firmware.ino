@@ -18,6 +18,7 @@ String AP = "Naboo";
 String PASS = "f6eb902f72";
 String HOST = "3.87.250.63";
 String PORT = "8080";
+String LAST_FEED = "";
 
 int countTimeCommand;
 boolean found = false;
@@ -29,12 +30,10 @@ void setup() {
   Serial.begin(9600);
   esp8266.begin(115200);
   myservo.attach(SERVO_PIN);
-  feed();
   clock.begin();
   //clock.setDateTime(__DATE__, __TIME__); // Set sketch compiling time
-  Serial.print("TIME: ");
-  dt = clock.getDateTime();
-  Serial.println(clock.dateFormat("d-m-Y H:i:s", dt));
+  delay(200);
+  feed();
   sendCommand("AT+RST", 5, "OK");
   sendCommand("AT", 5, "OK");
   sendCommand("AT+CWJAP=\"" + AP + "\",\"" + PASS + "\"", 20, "OK");
@@ -53,7 +52,8 @@ void loop() {
   T = (1.0 / (c1 + c2 * logR2 + c3 * logR2 * logR2 * logR2));
   T = T - 273.15;
   sendCommand("AT+CIPSTART=\"TCP\",\"" + HOST + "\"," + PORT, 5, "OK");
-  String dataString = "GET /data?T=" + String(T) + "&P=" + String(pH) + " HTTP/1.1";
+  Serial.println();
+  String dataString = "GET /data?T=" + String(T) + "&P=" + String(pH) + "&F=" + LAST_FEED + " HTTP/1.1";
   sendCommand("AT+CIPSEND=" + String(dataString.length() + 4),5,"OK");
   sendData(dataString, 5, "SEND OK");
   delay(2000);
@@ -63,15 +63,17 @@ void feed() {
   myservo.write(180);
   delay(1500);
   myservo.write(0);
+  dt = clock.getDateTime();
+  LAST_FEED = String(clock.dateFormat("YmdHi", dt));
 }
 
 void sendCommand(String command, int maxTime, char readReply[]) {
   Serial.print("Command => ");
   Serial.print(command);
   Serial.print(" ");
-  delay(20);
-  esp8266.println(command);
   delay(200);
+  esp8266.println(command);
+  delay(500);
 
   while (countTimeCommand < maxTime) {
 
@@ -99,10 +101,10 @@ void sendData(String command, int maxTime, char readReply[]) {
   Serial.print("DATA => ");
   Serial.print(command);
   Serial.print(" ");
-
   esp8266.println(command);
-  esp8266.println("");
   delay(200);
+  esp8266.println("");
+  delay(1000);
 
   while (countTimeCommand < maxTime) {
     if (esp8266.find(readReply)) {
@@ -113,12 +115,28 @@ void sendData(String command, int maxTime, char readReply[]) {
     countTimeCommand++;
     delay(20);
   }
-   Serial.print(" RESPONSE: ");
-   while(esp8266.available()) {
-     char t = esp8266.read();
-      Serial.print(t);
-   }
-   Serial.println("");
+  Serial.print(" RESPONSE ");
+  Serial.print(" (");
+  Serial.print(esp8266.available());
+  Serial.print("): ");
+  if (esp8266.available() > 10) {
+    if (esp8266.find("TIME") || esp8266.find("CLOSE") ) {
+      while(esp8266.available()) {
+      char t = esp8266.read();
+        Serial.print(t);
+      }
+    } else if (esp8266.find("FEED")) {
+      feed();
+    } else {
+      Serial.print("not a valid SERVER response");
+    }
+
+  } else {
+    Serial.print("SHORT SERVER response");
+  }
+
+
+  Serial.println("");
 
   /*if (esp8266.find("FEED")) {
     feed();
