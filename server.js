@@ -259,7 +259,7 @@ app.get('/data', function (req, res) {
     if (mustFeed) {
         res.end("FEED");
     } else {
-        res.end("TIME=YNNNNNYNNNNNNYNNNNNNYNN");
+//        res.end("TIME=YNNNNNYNNNNNNYNNNNNNYNN");
         res.end("TIME=111110111110111110111110");
     }
 
