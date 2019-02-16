@@ -248,13 +248,13 @@ app.get('/data', function (req, res) {
         lastRecord.lastFeed = moment(lastFeed).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
     }
 
-    res.removeHeader('Content-Type');
-    res.removeHeader('X-Powered-By');
-    res.removeHeader('Content-Length');
-    res.removeHeader('Transfer-Encoding');
-    res.removeHeader('ETag');
-    res.removeHeader('Date');
-    res.removeHeader('Connection');
+//    res.removeHeader('Content-Type');
+//    res.removeHeader('X-Powered-By');
+//    res.removeHeader('Content-Length');
+//    res.removeHeader('Transfer-Encoding');
+//    res.removeHeader('ETag');
+//    res.removeHeader('Date');
+//    res.removeHeader('Connection');
 
     if (mustFeed) {
         res.end("FEED");
