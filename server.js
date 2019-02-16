@@ -292,13 +292,6 @@ app.get('/data', function (req, res) {
 
 });
 
-app.get('/logout', function (req, res) {
-    if (req.isAuthenticated()) {
-        req.logout();
-    }
-    res.redirect('/login');
-});
-
 
 app.get('/logout', function (req, res) {
     if (req.isAuthenticated()) {
@@ -314,6 +307,13 @@ app.get('/', requireAuthentication, function (req, res) {
         lastRecord: lastRecord
     });
 });
+
+app.get('/feed', requireAuthentication, function (req, res) {
+    mustFeed = true;
+    req.flash('message', "Se enviará el comando a la pecera.");
+    res.redirect('/');
+});
+
 
 app.get('/settings', requireAuthentication, function (req, res) {
     return res.render(__dirname + '/views/settings.html', {
