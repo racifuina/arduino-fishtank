@@ -259,8 +259,35 @@ app.get('/data', function (req, res) {
     if (mustFeed) {
         res.end("FEED");
     } else {
-//        res.end("TIME=YNNNNNYNNNNNNYNNNNNNYNN");
-        res.end("TIME=111110111110111110111110");
+
+        let feedString = ""
+
+        currentSettings.feedSchedule.h00 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h01 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h02 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h03 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h04 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h05 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h06 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h07 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h08 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h09 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h10 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h11 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h12 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h13 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h14 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h15 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h16 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h17 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h18 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h19 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h20 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h21 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h22 ?  feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h23 ?  feedString += "Y" : feedString += "0";
+
+        res.end("TIME=" + feedString);
     }
 
 });
