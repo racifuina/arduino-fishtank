@@ -286,7 +286,7 @@ app.get('/data', function (req, res) {
         currentSettings.feedSchedule.h22 ? feedString += "Y" : feedString += "0";
         currentSettings.feedSchedule.h23 ? feedString += "Y" : feedString += "0";
 
-        if (req.query.F != feedString) {
+        if (req.query.S != feedString) {
             newLog("Server: TIME=" + feedString);
             res.end("TIME=" + feedString);
         } else {
