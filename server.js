@@ -285,8 +285,15 @@ app.get('/data', function (req, res) {
         currentSettings.feedSchedule.h21 ? feedString += "Y" : feedString += "0";
         currentSettings.feedSchedule.h22 ? feedString += "Y" : feedString += "0";
         currentSettings.feedSchedule.h23 ? feedString += "Y" : feedString += "0";
-        newLog("Server: TIME=" + feedString);
-        res.end("TIME=" + feedString);
+
+        if (req.query.F != feedString) {
+            newLog("Server: TIME=" + feedString);
+            res.end("TIME=" + feedString);
+        } else {
+            newLog("OK");
+            res.end("OK");
+        }
+
     }
 
 });
