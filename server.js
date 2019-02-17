@@ -240,6 +240,9 @@ function updateLastRecord(sensorData) {
         let lastFeed = moment.tz(sensorData.F, "YYYYMMDDHHmm", "America/Guatemala")
         lastRecord.lastFeed = moment(lastFeed).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
         io.emit("newRecord", lastRecord);
+        if (sensorData.T == "true") {
+            mustFeed = false;
+        }
     }
 }
 
