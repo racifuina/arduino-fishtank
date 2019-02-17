@@ -258,6 +258,7 @@ app.get('/data', function (req, res) {
 
     if (mustFeed) {
         res.end("FEED");
+        newLog("FEED");
     } else {
         let feedString = ""
         currentSettings.feedSchedule.h00 ? feedString += "Y" : feedString += "0";
@@ -284,11 +285,11 @@ app.get('/data', function (req, res) {
         currentSettings.feedSchedule.h21 ? feedString += "Y" : feedString += "0";
         currentSettings.feedSchedule.h22 ? feedString += "Y" : feedString += "0";
         currentSettings.feedSchedule.h23 ? feedString += "Y" : feedString += "0";
+        newLog("Server: TIME=" + feedString);
         res.end("TIME=" + feedString);
     }
 
 });
-
 
 app.get('/logout', function (req, res) {
     if (req.isAuthenticated()) {
