@@ -16,6 +16,7 @@ const app = express();
 const http = require("http").Server(app);
 const io = require("socket.io")(http);
 const moment = require('moment-timezone');
+const net = require('net');
 const fs = require('fs');
 const ejs = require('ejs');
 const bodyParser = require('body-parser');
@@ -65,7 +66,8 @@ let currentSettings = {
 let lastRecord = {
     date: "--",
     ph: 0,
-    temp: 0
+    temp: 0,
+    lastFeed: "--"
 };
 
 const smtpTransport = nodemailer.createTransport(smtpTransportRequire({
@@ -173,12 +175,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 io.on("connection", socket => {
-    console.log("socket connected")
 
-    socket.on("feedNow", response => {
-        mustFeed = true
-        response(true)
-    });
 });
 
 function requireAuthentication(req, res, next) {
@@ -235,18 +232,20 @@ app.post('/user', (req, res) => {
     });
 });
 
-app.get('/data', function (req, res) {
-    newLog("<b>HTTP Device: " + JSON.stringify(req.query) + "</b>");
-
-    let sensorData = JSON.stringify(req.query);
-
-    if (sensorData.P && sensorData.T) {
+function updateLastRecord(sensorData) {
+    if (sensorData.P && sensorData.T && sensorData.F) {
         lastRecord.ph = parseFloat(sensorData.P)
         lastRecord.temp = parseFloat(sensorData.T)
         lastRecord.date = moment(new Date()).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
-        let lastFeed = moment.tz(savedObj.time, "DDMMYYHHmm", "America/Guatemala")
+        let lastFeed = moment.tz(sensorData.F, "DDMMYYHHmm", "America/Guatemala")
         lastRecord.lastFeed = moment(lastFeed).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
+        io.emit("newRecord", lastRecord);
     }
+}
+
+app.get('/data', function (req, res) {
+    newLog("<b>HTTP Device: " + JSON.stringify(req.query) + "</b>");
+    updateLastRecord(req.query);
 
     res.removeHeader('Content-Type');
     res.removeHeader('X-Powered-By');
@@ -254,39 +253,37 @@ app.get('/data', function (req, res) {
     res.removeHeader('Transfer-Encoding');
     res.removeHeader('ETag');
     res.removeHeader('Date');
+
     res.removeHeader('Connection');
 
     if (mustFeed) {
         res.end("FEED");
     } else {
-
         let feedString = ""
-
-        currentSettings.feedSchedule.h00 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h01 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h02 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h03 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h04 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h05 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h06 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h07 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h08 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h09 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h10 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h11 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h12 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h13 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h14 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h15 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h16 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h17 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h18 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h19 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h20 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h21 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h22 ?  feedString += "Y" : feedString += "0";
-        currentSettings.feedSchedule.h23 ?  feedString += "Y" : feedString += "0";
-
+        currentSettings.feedSchedule.h00 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h01 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h02 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h03 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h04 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h05 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h06 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h07 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h08 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h09 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h10 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h11 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h12 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h13 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h14 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h15 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h16 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h17 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h18 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h19 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h20 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h21 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h22 ? feedString += "Y" : feedString += "0";
+        currentSettings.feedSchedule.h23 ? feedString += "Y" : feedString += "0";
         res.end("TIME=" + feedString);
     }
 
@@ -382,6 +379,48 @@ function newLog(log) {
     io.emit("newLog", log)
 }
 
+net.createServer(connection => {
+    connection.on('data', data => {
+
+        newLog("<b>TCP Device: " + data.toString() + "</b>");
+
+        if (mustFeed) {
+            connection.write("FEED");
+            newLog("FEED");
+        } else {
+            let feedString = ""
+            currentSettings.feedSchedule.h00 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h01 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h02 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h03 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h04 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h05 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h06 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h07 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h08 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h09 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h10 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h11 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h12 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h13 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h14 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h15 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h16 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h17 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h18 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h19 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h20 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h21 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h22 ? feedString += "Y" : feedString += "0";
+            currentSettings.feedSchedule.h23 ? feedString += "Y" : feedString += "0";
+            connection.write("TIME=" + feedString);
+            newLog("Server: TIME=" + feedString);
+        }
+    });
+
+}).listen(TCP_PORT, function () {
+    console.log(' - TCP Server Started on ' + TCP_PORT + ' :)');
+});
 http.listen(HTTP_PORT, function () {
     console.log(" - Web Server Started :)");
 });
