@@ -237,7 +237,7 @@ function updateLastRecord(sensorData) {
         lastRecord.ph = parseFloat(sensorData.P)
         lastRecord.temp = parseFloat(sensorData.T)
         lastRecord.date = moment(new Date()).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
-        let lastFeed = moment.tz(sensorData.F, "DDMMYYHHmm", "America/Guatemala")
+        let lastFeed = moment.tz(sensorData.F, "YYYYMMDDHHmm", "America/Guatemala")
         lastRecord.lastFeed = moment(lastFeed).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
         io.emit("newRecord", lastRecord);
     }
