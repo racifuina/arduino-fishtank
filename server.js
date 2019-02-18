@@ -291,7 +291,7 @@ app.get('/data', function (req, res) {
 
         if (req.query.S != feedString) {
             let replyDate = moment(new Date()).tz('America/Guatemala').format("YYYYMMDDHHmmss");
-            res.end("TIME=" + feedString + "CLK=" + replyDate);
+            res.end("TIME=" + feedString + "" + replyDate);
             newLog("Server: TIME=" + feedString + "CLK=" + replyDate);
         } else {
             newLog("OK");
