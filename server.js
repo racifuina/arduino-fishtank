@@ -290,8 +290,9 @@ app.get('/data', function (req, res) {
         currentSettings.feedSchedule.h23 ? feedString += "Y" : feedString += "0";
 
         if (req.query.S != feedString) {
-            newLog("Server: TIME=" + feedString);
-            res.end("TIME=" + feedString);
+            let replyDate = moment(new Date()).tz('America/Guatemala').format("YYYYMMDDHHmmss");
+            connection.write("TIME=" + feedString + "CLK=" + replyDate);
+            newLog("Server: TIME=" + feedString + "CLK=" + replyDate);
         } else {
             newLog("OK");
             res.end("OK");
@@ -390,50 +391,6 @@ function newLog(log) {
     io.emit("newLog", log)
 }
 
-net.createServer(connection => {
-    connection.on('data', data => {
-
-        newLog("<b>TCP Device: " + data.toString() + "</b>");
-
-        if (mustFeed) {
-            connection.write("FEED");
-            newLog("FEED");
-        } else {
-            let feedString = ""
-            currentSettings.feedSchedule.h00 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h01 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h02 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h03 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h04 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h05 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h06 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h07 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h08 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h09 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h10 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h11 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h12 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h13 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h14 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h15 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h16 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h17 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h18 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h19 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h20 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h21 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h22 ? feedString += "Y" : feedString += "0";
-            currentSettings.feedSchedule.h23 ? feedString += "Y" : feedString += "0";
-            let replyDate = moment(new Date()).tz('America/Guatemala').format("YYYYMMDDHHmmss");
-
-            connection.write("TIME=" + feedString + "CLK=" + replyDate);
-            newLog("Server: TIME=" + feedString + "CLK=" + replyDate);
-        }
-    });
-
-}).listen(TCP_PORT, function () {
-    console.log(' - TCP Server Started on ' + TCP_PORT + ' :)');
-});
 http.listen(HTTP_PORT, function () {
     console.log(" - Web Server Started :)");
 });
