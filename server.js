@@ -424,7 +424,7 @@ net.createServer(connection => {
             currentSettings.feedSchedule.h21 ? feedString += "Y" : feedString += "0";
             currentSettings.feedSchedule.h22 ? feedString += "Y" : feedString += "0";
             currentSettings.feedSchedule.h23 ? feedString += "Y" : feedString += "0";
-            let replyDate = moment(new Date()).tz('America/Guatemala').format("YYMMDDHHmmss");
+            let replyDate = moment(new Date()).tz('America/Guatemala').format("YYYYMMDDHHmmss");
 
             connection.write("TIME=" + feedString + "CLK=" + replyDate);
             newLog("Server: TIME=" + feedString + "CLK=" + replyDate);
