@@ -186,7 +186,7 @@ void sendData(String command, int maxTime, char readReply[]) {
           second += int(t);
         }
 
-        if (position > 31) {
+        if (position == 31) {
           Serial.print(year);
           Serial.print("-");
           Serial.print(month);
