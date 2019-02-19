@@ -1,231 +1,282 @@
-#include <Servo.h>
-#include <DS3231.h>
-#include <SoftwareSerial.h>
+#include <Servo.h> //LIBRERÍA ENCARGADA DE LA COMUNICACIÓN CON EL SERVO MOTOR
+#include <DS3231.h> //LIBRERIA ENCARGADA DEL MÓDULO DE REAL TIME CLOCK (RTC)
+#include <SoftwareSerial.h> //LIBRERÍA PARA TENER UN PUERTO SERIAL EXTRA.
 
-int ph_pin = A2; // -> PIN de lectura de la sonda.
-int ThermistorPin = A0; // -> PIN de lectura de sensor de Temperatura.
-
-int SERVO_PIN = 9; // -> PIN de lectura de sensor de Temperatura.
-int Vo;
+int lastFeedingHour = 0; //VARIABLE QUE GUARDA EL NÚMERO (0...23) DE LA HORA EN QUE SE REALIZÓ UNA ALIMENTACIÓN AUTOMÁTICA POR ÚLTIMA VEZ.
+int ph_pin = A2; // -> PIN DE LECTURA DE LA SONDE DE PH
+int ThermistorPin = A0; // -> PIN DE LECTURA DE SENSOR DE TEMPERATURA (THERMISTOR)
+int SERVO_PIN = 9; // -> PIN DE COMUNICACIÓN CON EL SERVO MOTOR
 float R1 = 10000;
 float logR2, R2, T;
 float c1 = 1.009249522e-03, c2 = 2.378405444e-04, c3 = 2.019202697e-07;
-Servo myservo;
-DS3231 clock;
-RTCDateTime dt;
+Servo myservo;  //DEFINICIÓN DE VARIABLE DE SERVO MOTOR
+DS3231 clock;  //DEFINICIÓN DE VARIABLE DEL RTC
+RTCDateTime dt; //DEFINICIÓN DE VARIABLE DE TIPO FECHA PARA OBTENER TIMESTAMPS
 
-String AP = "Naboo";
-String PASS = "f6eb902f72";
-String HOST = "3.87.250.63";
-String PORT = "8080";
-String LAST_FEED = "";
-String CURRENTSETTINGS = "000000000000000000000000";
-boolean manualFeed = false;
-int countTimeCommand;
-boolean found = false;
-
-SoftwareSerial esp8266(4, 5);
+String AP = "KevinR"; //NOMBRE DE LA RED WIFI A LA QUE SE DEBE CONECTAR EL ESP8266
+String PASS = "30378917"; //CONTRASEÑA DE LA RED WIFI A LA QUE SE DEBE CONECTAR EL ESP8266.
+String HOST = "mipecera.online"; //DOMINIO AL QUE DEBE REPORTARSE EL DISPOSITIVO.
+String PORT = "8080"; //PUERTO AL QUE DEBE CONECTARSE.
+String LAST_FEED = ""; //VARIABLE QUE ALMACENA EL TIMESTAMP DE LA ÚLTIMA VEZ QUE SE REALIZÓ UNA ALIMENTACIÓN SEA MANUAL O AUTOMÁTICA.
+String AUTO_FEED_SETTINGS = "000000000000000000000000"; //VARIABLE QUE ALMACENA LA CONFIGURACIÓN ACTUAL DE ALIMENTACIÓN AUTOMÁTICA.
+bool manualFeed = false; //VARIABLE QUE INDICA SI SE REALIZÓ UNA ALIMENTACIÓN MANUAL O NO.
+bool automaticFeed = false; //VARIABLE QUE INDICA SI SE REALIZÓ UNA ALIMENTACIÓN AUTOMÁTICA.
+SoftwareSerial esp8266(4, 5); //DEFINICIÓN DE PUERTO SERIAL PARA LA COMUNICACIÓN CON ESP8266
 
 void setup() {
-  Serial.begin(9600);
-  esp8266.begin(9600);
-  myservo.attach(SERVO_PIN);
-  clock.begin();
-  feed();
-  sendCommand("AT+RST", 3, "OK");
-  sendCommand("AT", 5, "OK");
-  sendCommand("AT+CWJAP=\"" + AP + "\",\"" + PASS + "\"", 20, "OK");
-  sendCommand("AT+CIPMUX=0", 5, "OK");
-  sendCommand("AT+CIPMODE=0", 5, "OK");
+  Serial.begin(9600);  //INICIALIZACIÓN DEL PUERTO SERIAL A 9600 BAUDIOS PARA IMPRIMIR DATOS DE DESARROLLO Y DEBUG EN LA COMPUTADORA
+  esp8266.begin(9600); //INICIALIZACIÓN DEL PUERTO SERIAL A 9600 BAUDIOS PARA LA COMUNICACIÓN CON ESP8266
+  clock.begin(); //INICIALIZACIÓN DE LA COMUNICACIÓN CON RTC
+  sendCommand("AT+RST", 3, "OK"); //COMANDO RESET PARA REINICIAR EL ESP8266.
+  sendCommand("AT", 5, "OK"); //COMANDO AT, SOLO PARA REVISAR QUE RESPONDA EL ESP8266.
+  sendCommand("AT+CWJAP=\"" + AP + "\",\"" + PASS + "\"", 20, "OK"); //CONETCAR A RED WIFI. PARAMETROS: NOMBRE Y CONTRASEÑA DE RED
+  sendCommand("AT+CIPMUX=0", 5, "OK"); //ESTABLECER UN ÚNICO CANAL DE COMUNICACIÓN.
+  sendCommand("AT+CIPMODE=0", 5, "OK");  //ESTABLECER MODO DE COMUNICACIÓN NORMAL.
 }
 
 void loop() {
+  //FASE DE ALIMENTACIÓN AUTOMÁTICA.
+  dt = clock.getDateTime(); //TOMA EL TIEMPO DEL RTC.
+  int currentHour = String(clock.dateFormat("H", dt)).toInt(); //APLICAR FORMATO A LA FECHA PARA TOMAR SOLAMENTE LA HORA (0...23) Y CONVERTIRLA A UN int
+
+  //REVISAR SI LA POSICIÓN DE LA HORA ACTUAL EN LA CADENA DE CONFIGURACIÓN DE ALIMENTACIÓN AUTOMÁTICA INDICA QUE HAY QUE ALIMENTAR EN ESA HORA.
+  if (AUTO_FEED_SETTINGS.charAt(currentHour) == 'Y') {
+    if (lastFeedingHour != currentHour) {
+      //SI LA ULTIMA HORA DE ALIMENTACIÓN NO ES IGUAL A LA HORA ACTUAL SE EJECUTA LA ALIMENTACIÓN.
+      feed();
+      automaticFeed = true; //ASIGNAR TRUE A LA VARIABLE QUE INDICA QUE SE REALIZÓ UNA ALIMENTACIÓN AUTOMÁTICA.
+      Serial.println("SELF FEED"); //DEBUG: IMPRIMIR QUE SE REALIZÓ UNA ALIMENTACIÓN AUTOMÁTICA.
+      //SE ASIGNA LA HORA ACTUAL A LA VARIABLE DE LA ÚLTIMA HORA DE ALIMENTACIÓN, PARA QUE NO SE VUELVA A ALIMENTAR DURANTE ESTA HORA.
+      lastFeedingHour = currentHour;
+    }
+  }
 
   //LECTURA DE pH
-  float Po = (1023 - analogRead(ph_pin)); //lectura analogica de la sonda (voltaje).
-  float pHm = map(Po, 290, 406, 400, 700); //Conversión del valor obtenido del sensor en voltaje a nivel de pH en cientos.
-  float pH = (pHm / 100); //División del valor de ph en cientos para obtener valor de ph verdadero.
+  float Po = (1023 - analogRead(ph_pin)); //LECTURA ANALOGICA DE LA SONDA DE PH (VOLTAJE)
+  float pHm = map(Po, 290, 406, 400, 700); //CONVERSIÓN DEL VALOR OBTENIDO DEL SENSOR EN VOLTAJE A NIVEL DE PH EN CIENTOS.
+  float pH = (pHm / 100); //DIVISIÓN DEL VALOR DE PH EN CIENTOS, PARA OBTENER EL VALOR DE PH VERDADERO.
 
-  //LECTURA DE Temperatura
-  Vo = analogRead(ThermistorPin); //lectura analogica del pin del Thermistor (Sensor de temperatura)(voltaje).
+  //LECTURA DE TEMPERATURA
+  int Vo = analogRead(ThermistorPin); //LECTURA ANALOGICA DEL PIN DEL THERMISTOR (SENSOR DE TEMPERATURA) (VOLTAJE).
   R2 = R1 * (1023.0 / (float)Vo - 1.0); //
   logR2 = log(R2);
   T = (1.0 / (c1 + c2 * logR2 + c3 * logR2 * logR2 * logR2));
-  T = T - 273.15; //Conversión de temperatura de Kelvin's a ºCentigrados.
+  T = T - 273.15; //CONVERSIÓN DE TEMPERATURA, DE KELVIN'S A ºCENTIGRADOS.
 
-  //FASE DE ENVÍO DE DATOS
-  sendCommand("AT+CIPSTART=\"TCP\",\"" + HOST + "\"," + PORT, 5, "OK");
-  String dataString = "GET /data?T=" + String(T) + "&P=" + String(pH) + "&F=" + LAST_FEED + "&S=" + CURRENTSETTINGS + "&M=" + manualFeed + " HTTP/1.1";
-  manualFeed = false; //Reset de la variable de alimentación manual.
-  sendCommand("AT+CIPSEND=" + String(dataString.length() + 4),5,"OK"); //Enviar comando para habilitar el envío de datos con
-  sendData(dataString, 5, "SEND OK");
+  //FASE DE ENVÍO DE DATOS AL SERVIDOR
+  sendCommand("AT+CIPSTART=\"TCP\",\"" + HOST + "\"," + PORT, 5, "OK"); //INICIAR LA CONEXION TCP CON EL SERVIDOR.
+
+  //GENERACIÓN DE LA CADENA DE DATOS USANDO EL FORMATO DEL METODO HTTP GET.
+  String dataString = "GET /data?T=" + String(T) + "&P=" + String(pH) + "&F=" + LAST_FEED + "&S=" + AUTO_FEED_SETTINGS + "&M=" + manualFeed + "&A=" + automaticFeed + " HTTP/1.1";
+  manualFeed = false; //RESET DE VARIABLE DE ALIMENTACIÓN MANUAL.
+  automaticFeed = false; //RESET DE VARIABLE DE ALIMENTACIÓN AUTOMÁTICA.
+  sendCommand("AT+CIPSEND=" + String(dataString.length() + 4),5,"OK"); //ENVIAR EL COMANDO PARA HABILITAR EL ENVÍO DE DATOS AL SERVIDOR A TRAVÉS DE ESP8266
+  sendDataToServer(dataString, 5, "SEND OK"); //ENVÍO DE CADENA DE DATOS A EL SERVIDOR.
 
   //FASE FINAL
-  delay(2000); //Pausa de 2 segundos.
+  delay(2000); //PAUSA DE 2 SEGUNDOS ENTRE CADA ITERACIÓN.
 }
 
-void feed() {
-  myservo.write(180);
-  delay(1500);
-  myservo.write(0);
-  dt = clock.getDateTime();
-  LAST_FEED = String(clock.dateFormat("YmdHi", dt));
+void feed() { //FUNCIÓN QUE EJECUTA LA ALIMENTACIÓN.
+  myservo.attach(SERVO_PIN); //INICIALIZACIÓN DEL PUERTO DE COMUNICACIÓN CON SERVO MOTOR.
+  myservo.write(180); //MUEVE EL SERVO MOTOR 180 º.
+  delay(1500); //ESPERA 1.5 SEGUNDOS EN ESA POSICIÓN.
+  myservo.write(0);  //REGRESA EL SERVO MOTOR A LA POSICIÓN DE REPOSO 0º.
+  delay(1500); //ESPERA 1.5 SEGUNDOS EN ESA POSICIÓN.
+  myservo.detach();
+  dt = clock.getDateTime(); //TOMA EL TIEMPO DEL RTC.
+  LAST_FEED = String(clock.dateFormat("YmdHi", dt)); //ASIGNA EL TIMESTAMP A LA VARIABLE DE LA ÚLTIMA ALIMENTACIÓN.
 }
 
-void sendCommand(String command, int maxTime, char readReply[]) {
-  Serial.print("Command => ");
-  Serial.print(command);
-  Serial.print(" ");
-  delay(200);
-  esp8266.println(command);
-  delay(500);
+/*
+void sendCommand()
 
-  while (countTimeCommand < maxTime) {
+FUNCIÓN ENCARGADA DE ENVIAR COMANDOS AL ESP8266.
+
+PARAMETROS:
+ * String command: CADENA QUE CONTIENE EL COMANDO QUE SE ENVIARÁ AL ESP8266
+ * Int maxRetries: INDICA CUANTAS VECES PUEDE REINTENTAR RECIBIR LA RESPUESTA ESPERADA DEL ESP8266
+ * char readReply[]  RESPUESTA ESPERADA AL COMANDO ENVIADO
+*/
+
+void sendCommand(String command, int maxRetries, char readReply[]) {
+  int retriesCount = 0; //CANTIDAD DE VECES QUE SE HA LEIDO SI YA SE RECIBIÓ LA RESPUESTA ESPERADA
+  bool foundReply = false;  //VARABLE QUE INDICA SI YA SE RECIBIÓ LA RESPUESTA ESPERADA DEL COMANDO ENVIADO A ESP8266.
+  Serial.print("Command => "); //DEBUG: IMPRIME EN EL PUERTO SERIAL LO QUE SE ESTÁ ENVIANDO AL ESP8266
+  Serial.print(command); //DEBUG: IMPRIME EN EL PUERTO SERIAL LO QUE SE ESTÁ ENVIANDO AL ESP8266
+  Serial.print(" "); //DEBUG: IMPRIME EN EL PUERTO SERIAL LO QUE SE ESTÁ ENVIANDO AL ESP8266
+  delay(200); //ESPERA DE 200 MILISEGUNDOS
+  esp8266.println(command); //ENVÍO DEL COMANDO AL ESP8266
+  delay(500); //ESPERAR  500 MILISEGUNDOS PARA EMPEZAR A LEER SI EL ESP8266 YA ENVÍO LA RESPUESTA ESPERADA AL COMANDO
+
+  while (retriesCount < maxRetries) {
     if (esp8266.find(readReply)) {
-      found = true;
+      foundReply = true;
       break;
     }
-    Serial.println("COMMAND RETRY");
-    countTimeCommand++;
+    retriesCount++;
   }
 
-  if (found == true) {
-    Serial.println("Success");
-    countTimeCommand = 0;
+  if (foundReply == true) {
+    Serial.println("Success"); //DEBUG: IMPRIME EN EL PUERTO SERIAL QUE EL COMANDO FUE ENVIADO EXITOSAMENTE
+  } else {
+    Serial.println("Fail"); //DEBUG: IMPRIME EN EL PUERTO SERIAL QUE NO SE RECIBIÓ UNA LA RESPUESTA ESPERADA DEL ESP8266 (ERROR)
   }
-
-  if (found == false) {
-    Serial.println("Fail");
-    countTimeCommand = 0;
-  }
-
-  found = false;
 }
 
-void sendData(String command, int maxTime, char readReply[]) {
-  Serial.print("DATA => ");
-  Serial.print(command);
-  Serial.print(" ");
-  esp8266.println(command);
-  delay(200);
-  esp8266.println("");
-  delay(1000);
+/*
+void sendDataToServer()
 
-  while (countTimeCommand < maxTime) {
+FUNCIÓN ENCARGADA DE ENVIAR CADENAS DE DATOS AL SERVIDOR E INTERPRETAR LA RESPUESTA DEL SERVIDOR.
+
+POSIBLES RESPUESTAS DEL SERVIDOR:
+ * OK: RESPUESTA QUE TODO ESTÁ BIEN Y NO HAY QUE REALIZAR NINGUNA ACCION ADICIONAL.
+ * TIME=:  ENVÍA LA CONFIGURACIÓN DE LA ALIMENTACIÓN AUTOMÁTICA Y LUEGO LA FECHA Y HORA ACTUAL DEL SERVIDOR PARA CONFIGURAR EL RTC
+ * FEED : COMANDO QUE INDICA QUE HAY QUE REALIZAR UNA ALIMENTACIÓN MANUAL INMEDIATAMENTE.
+
+PARAMETROS DE LA FUNCIÓN:
+ * String command: CADENA QUE CONTIENE EL COMANDO QUE SE ENVIARÁ AL ESP8266.
+ * Int maxRetries: INDICA CUANTAS VECES SE DEBE REINTENTAR RECIBIR LA RESPUESTA ESPERADA DEL ESP8266 .
+ * char readReply[]  RESPUESTA ESPERADA AL COMANDO ENVIADO.
+*/
+
+void sendDataToServer(String dataString, int maxRetries, char readReply[]) {
+  int retriesCount = 0; //CANTIDAD DE VECES QUE SE HA LEIDO SI YA SE RECIBIÓ LA RESPUESTA ESPERADA
+  bool foundReply = false;  //VARABLE QUE INDICA SI YA SE RECIBIÓ LA RESPUESTA ESPERADA DEL COMANDO ENVIADO A ESP8266 O DEL SERVIDOR.
+  Serial.print("DATA => "); //DEBUG: IMPRIME EN EL PUERTO SERIAL LA CADENA DE DATOS QUE SE ESTÁ ENVIANDO AL SERVIDOR.
+  Serial.print(dataString); //DEBUG: IMPRIME EN EL PUERTO SERIAL LA CADENA DE DATOS QUE SE ESTÁ ENVIANDO AL SERVIDOR.
+  Serial.print(" "); //DEBUG: IMPRIME EN EL PUERTO SERIAL LA CADENA DE DATOS QUE SE ESTÁ ENVIANDO AL SERVIDOR.
+  esp8266.println(dataString);  //ENVÍO DE CADENA DE DATOS A EL SERVIDOR.
+  delay(200); //ESPERAR 200 MILISEGUNDOS.
+  esp8266.println(""); //ENVÍAR UN SALTO DE LÍNEA PARA COMPLETAR EL ENVÍO DE LA CADENA DE DATOS
+  delay(1000); //ESPERAR 1 SEGUNDO EN LO QUE EL SERVIDOR ENVÍA LA RESPUESTA DE LA CADENA DE DATOS.
+
+  while (retriesCount < maxRetries) {
     if (esp8266.find(readReply)) {
-      found = true;
+      foundReply = true;
       break;
     }
-    //esp8266.println("");
-    Serial.println("DATA RETRY");
-    countTimeCommand++;
-    //delay(20);
+    retriesCount++;
   }
 
-  Serial.print(" RESPONSE ");
-  Serial.print(" (");
-  Serial.print(esp8266.available());
-  Serial.println("): ");
+  Serial.print(" RESPONSE LENGTH: "); //DEBUG: IMPRIMIR LA LONGITUD DE LA CADENA DE ESPUESTA RECIBIDA
+  Serial.println(esp8266.available()); //DEBUG: IMPRIMIR LA LONGITUD DE LA CADENA DE ESPUESTA RECIBIDA
 
   if (esp8266.available() > 44) {
-    if (esp8266.find("=")) {
-      int position = 0;
-      CURRENTSETTINGS = "";
-      while(esp8266.available()) {
-        char t = esp8266.read();
-        Serial.print(t);
-        if (position < 24) {
-          CURRENTSETTINGS = CURRENTSETTINGS + String(t);
+      //SI LA RESPUESTA DEL SERVIDOR ES MAYOR A 44 BYTES, SIGNIFICA QUE CONTIENE CAMBIOS EN LA CONFIGURACIÓN DE LA ALIMENTACIÓN AUTOMATICA.
+
+    if (esp8266.find("=")) { //LECTURA DEL CONTENIDO DEL BUFFER HASTA ENCONTRAR EL SIGNO "=".
+      //A PARTIR DE ESTE PUNTO SE ENCUENTRAN LAS CONFIGURACIONES DE ALIMENTACIÓN AUTOMATICA Y LA HORA PARA CONFIGURAR EL RTC.
+
+      int charPosition = 0; //POSICIÓN DE LA CADENA DE CONFIGURACIÓNES.
+
+      /*
+      DE POSICIÓN 0 A 23: CONFIGURACIÓN DE ALIMENTACIÓN AUTOMÁTICA, CADA POSICIÓN REPRESENTA LA HORA DEL DÍA.
+      SI EL CONTENIDO DE LA POSICIÓN ES "0" SIGNIFICA QUE A ESA HORA NO HAY QUE ALIMENTAR.
+      SI EL CONTENIDO DE LA POSICIÓN ES "Y" SIGNIFICA QUE A ESA HORA SI HAY QUE ALIMENTAR AUTOMATICAMENTE.
+
+      DE POSICIÓN 24 A POSICIÓN 37: CONFIGURACIÓN DE FECHA Y HORA PARA EL RTC.
+      EL SERVIDOR ENVÍA LA FECHA Y HORA EN FORMATO YYYYMMDDHHmm
+      SE REALIZA EL CALCULO BYTE POR BYTE Y SE ASIGNA LA HORA A EL RTC.
+
+      VACIAR LA CADENA DE CONFIGURACIÓN DE ALIMENTACIÓN AUTOMATICA PARA ASIGNARLE LA NUEVA CONFIGURACIÓN ENVIADA POR EL SERVIDOR.
+      */
+      AUTO_FEED_SETTINGS = "";
+
+      //VARIABLES PARA GUARDAR LA CONFIGURACIÓN DE LA FECHA Y HORA ENVIADA POR EL SERVIDOR.
+      int year = 0;
+      int month = 0;
+      int day = 0;
+      int hour = 0;
+      int minute = 0;
+      int second = 0;
+
+      while(esp8266.available()) { //ITERAR MIENTRAS HAYA INFORMACIÓN EN EL BUFFER DEL PUERTO SERIAL DEL ESP8266.
+
+        char t = esp8266.read(); //LECTURA DEL SIGUIENTE BYTE DEL BUFFER Y CONVERTIRLO EN char.
+        Serial.print(t); //DEBUG: IMPRESIÓN DEL char QUE SE ESTÁ PROCESANDO EN ESTA ITERACIÓN.
+
+        if (charPosition < 24) {
+          AUTO_FEED_SETTINGS = AUTO_FEED_SETTINGS + String(t); //CONCATENAR EL char A LA CADENA DE CONFIGURACIÓN DE ALIMENTACIÓN AUTOMÁTICA.
         }
 
-        int year = 0;
-        int month = 0;
-        int day = 0;
-        int hour = 0;
-        int minute = 0;
-        int second = 0;
-        //YYYYMMDDHHmmss
-        if (position == 24) {
-          year += int(t) * 1000;
+        //CONCATENACIÓN DE LOS BYTES PARA OBTENER EL AÑO DE LA FECHA ACTUAL FORMATO YYYY.
+        if (charPosition == 24) {
+          year += String(t).toInt() * 1000;
         }
-        if (position == 25) {
-          year += int(t) * 100;
+        if (charPosition == 25) {
+          year += String(t).toInt() * 100;
         }
-        if (position == 26) {
-          year += int(t) * 10;
+        if (charPosition == 26) {
+          year += String(t).toInt() * 10;
         }
-        if (position == 27) {
-          year += int(t);
+        if (charPosition == 27) {
+          year += String(t).toInt();
         }
 
-        if (position == 28) {
-          month += int(t) * 10;
+        //CONCATENACIÓN DE LOS BYTES PARA OBTENER EL MES DE LA FECHA ACTUAL FORMATO MM
+        if (charPosition == 28) {
+          month += String(t).toInt() * 10;
         }
-        if (position == 29) {
-          month += int(t);
-        }
-
-        if (position == 30) {
-          day += int(t) * 10;
-        }
-        if (position == 31) {
-          day += int(t);
+        if (charPosition == 29) {
+          month += String(t).toInt();
         }
 
-        if (position == 30) {
-          minute += int(t) * 10;
+        //CONCATENACIÓN DE LOS BYTES PARA OBTENER EL DÍA DE LA FECHA ACTUAL FORMATO DD
+        if (charPosition == 30) {
+          day += String(t).toInt() * 10;
         }
-        if (position == 31) {
-          minute += int(t);
-        }
-
-        if (position == 30) {
-          second += int(t) * 10;
-        }
-        if (position == 31) {
-          second += int(t);
+        if (charPosition == 31) {
+          day += String(t).toInt();
         }
 
-        if (position == 31) {
-          Serial.print(year);
-          Serial.print("-");
-          Serial.print(month);
-          Serial.print("-");
-          Serial.print(day);
-          Serial.print(" ");
-
-          Serial.print(hour);
-          Serial.print(":");
-          Serial.print(minute);
-          Serial.print(":");
-          Serial.print(second);
-          Serial.println("");
+        //CONCATENACIÓN DE LOS BYTES PARA OBTENER LAS HORAS DE LA FECHA ACTUAL FORMATO HH
+        if (charPosition == 32) {
+          hour += String(t).toInt() * 10;
+        }
+        if (charPosition == 33) {
+          hour += String(t).toInt();
         }
 
-        position++;
+        //CONCATENACIÓN DE LOS BYTES PARA OBTENER LOS MINUTOS DE LA FECHA ACTUAL FORMATO mm
+        if (charPosition == 34) {
+          minute += String(t).toInt()* 10;
+        }
+        if (charPosition == 35) {
+          minute += String(t).toInt();
+        }
+
+        //CONCATENACIÓN DE LOS BYTES PARA OBTENER LOS SEGUNDOS DE LA FECHA ACTUAL FORMATO ss
+        if (charPosition == 36) {
+          second += String(t).toInt()* 10;
+        }
+        if (charPosition == 37) {
+          second += String(t).toInt();
+           //CONFIGURAR FECHA Y HORA DEL RTC CON LOS PARAMETROS ENVIADOS POR EL SERVIDOR.
+          clock.setDateTime(year, month, day, hour, minute, second);
+        }
+        charPosition++; //AUMENTO DEL CONTADOR EN 1.
       }
     } else {
-      Serial.print("not a valid SERVER response");
+      Serial.print("SERVER REPLY NOT VALID"); //DEBUG: IMPRIMIR EN EL PUERTO SERIAL QUE NO SE RECIBIÓ UNA RESPUESTA VALIDA DE PARTE DEL SERVIDOR.
     }
-  } else if (esp8266.find("FEED")) {
-    Serial.print("FEED");
-    manualFeed = true;
-    feed();
+  } else if (esp8266.find("FEED")) { //LECTURA DEL CONTENIDO DEL BUFFER HASTA ENCONTRAR EL COMANDO FEED.
+    Serial.print("MANUAL FEED"); //DEBUG: IMPRIME EN EL PUERTO SERIAL EL MENSAJE QUE SE HARÁ UNA ALIMENTACIÓN MANUAL
+    manualFeed = true; //ESTABLECE COMO TRUE LA VARIABLE QUE SE HA REALIZADO UNA ALIMENTACIÓN MANUAL
+    feed(); //EJECUTA LA ALIMENTACIÓN MANUAL
   } else {
-    Serial.print("OK");
+    /*
+    LLEGAR A ESTE PUNTO DEL PROGRAMA SIGNIFICA QUE LA RESPUESTA DEL SERVIDOR ES "OK"
+    YA QUE NO SE RECIBIERON PARAMETROS DE CONFIGURACIÓN, NI ORDENES DE ALIMENTAR MANUALMENTE
+    */
+    Serial.print("OK"); //DEBUG: IMPRIME EN EL PUERTO SERIAL OK
   }
 
-  Serial.println("");
+  Serial.println(""); //DEBUG: IMPRIME EN EL PUERTO SERIAL UN SALTO DE LINEA
 
-  if (found == true) {
-    Serial.println("Success");
-    countTimeCommand = 0;
+  if (foundReply == true) {
+    Serial.println("SUCESS"); //DEBUG: IMPRIME EN EL PUERTO SERIAL QUE EL COMANDO FUE ENVIADO EXITOSAMENTE
+  } else {
+    Serial.println("FAIL"); //DEBUG: IMPRIME EN EL PUERTO SERIAL QUE NO SE RECIBIÓ UNA LA RESPUESTA ESPERADA DEL ESP8266 (ERROR)
   }
-
-  if (found == false) {
-    Serial.println("Fail");
-    countTimeCommand = 0;
-  }
-
-  found = false;
 }
