@@ -1,2 +1,2 @@
 # arduino-fishtank
-arduino based fishtank control
+Control de una pecera con alimentación automática basada en Arduino.

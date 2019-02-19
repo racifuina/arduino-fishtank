@@ -1,32 +1,29 @@
-require('dotenv').config();
+require('dotenv').config(); //CONFIGURACIÓN Y LECTURA DE VARIABLES DE ENTORNO.
 console.log("*****  Starting mipecera.online Server *****");
-console.log(" - NODE_ENV", process.env.NODE_ENV)
+//CONFIGURACIÓN DE LIBRERÍAS Y DEPENDENCIAS
+const HTTP_PORT = process.env.PORT || 8080; //PUERTO DONDE SE HABILITARÁ EL SERVIDOR HTTP
+const mongoose = require("mongoose"); //DRIVER DE CONEXIÓN A BASE DE DATOS DE MONGODB
+const passport = require('passport'); //LIBRERÍA ENCARGADA DE AUTENTICAR Y MANEJAR LAS SESIONES DE USUARIOS
+const LocalStrategy = require('passport-local').Strategy; //ESTRATEGÍA DE AUTENTICACIÓN LOCAL (USUARIO Y CONTRASEÑA)
+const session = require('express-session'); //GESTION DE SESIONES DE USUARIOS
+const sharedsession = require("express-socket.io-session"); //GESTION DE SESIONES DE USUARIOS EN WEBSOCKET.
+const MongoStore = require('connect-mongo')(session); //DRIVER PARA GUARDAR SESIONES EN BASE DE DATOS.
+const express = require("express"); //GESTOR DE SERVIDOR Y API
+const app = express(); //CREACIÓN DEL SERVIDOR DE EXPRESS.JS
+const http = require("http").Server(app); //CREACIÓN DEL SERVIDOR HTTP
+const io = require("socket.io")(http); //INCIALIZACIÓN DEL WEBSOCKET
+const moment = require('moment-timezone'); //LIBRERÍA QUE CONTROLA EL TIEMPO (FECHA Y HORA)
+const fs = require('fs'); //SISTEMA DE ARCHIVOS (FILE SYSTEM)
+const ejs = require('ejs'); //RENDERIZADOR DE VISTAS HTML
+const bodyParser = require('body-parser'); //VALIDADOR DE PARAMETROS HTTP
+const flash = require('connect-flash'); //GESTOR DE ALARMAS Y ALERTAS EN HTML
+const nodemailer = require("nodemailer"); //DRIVER DE CORREO ELECTRÓNICO
+const smtpTransportRequire = require("nodemailer-smtp-transport"); //DRIVER DE CORREO ELECTRÓNICO PARA GMAIL
+mongoose.Promise = global.Promise; //GESTOR DE PROMESAS DE JAVASCRIPT
 
-const HTTP_PORT = process.env.PORT || 8080;
-const TCP_PORT = process.env.TCP_PORT || 3000;
-const mongoose = require("mongoose");
-const path = require("path");
-const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
-const session = require('express-session');
-const sharedsession = require("express-socket.io-session");
-const MongoStore = require('connect-mongo')(session);
-const express = require("express");
-const app = express();
-const http = require("http").Server(app);
-const io = require("socket.io")(http);
-const moment = require('moment-timezone');
-const net = require('net');
-const fs = require('fs');
-const ejs = require('ejs');
-const bodyParser = require('body-parser');
-const flash = require('connect-flash');
-const nodemailer = require("nodemailer");
-const smtpTransportRequire = require("nodemailer-smtp-transport");
-const CronJob = require('cron').CronJob;
-mongoose.Promise = global.Promise;
-let mustFeed = false;
-let currentSettings = {
+let mustFeed = false; //VARIABLE QUE INDICA SI HAY QUE ALIMENTAR MANUALMENTE O NO.
+
+let currentSettings = { //CONFIGURACION DE ALIMENTACIÓN AUTOMÁTICA Y DE ENVÍO DE ALERTAS.
     feedSchedule: {
         h00: false,
         h01: false,
@@ -63,14 +60,14 @@ let currentSettings = {
     }
 };
 
-let lastRecord = {
+let lastRecord = { //ÚLTIMO REGISTRO ENVIADO POR EL DISPOSITIVO
     date: "--",
     ph: 0,
     temp: 0,
     lastFeed: "--"
 };
 
-const smtpTransport = nodemailer.createTransport(smtpTransportRequire({
+const smtpTransport = nodemailer.createTransport(smtpTransportRequire({ //CONNECTAR A SERVIDOR DE CORREOS ELECTRÓNICOS
     service: 'gmail',
     auth: {
         user: process.env.EMAIL_USER,
@@ -78,14 +75,13 @@ const smtpTransport = nodemailer.createTransport(smtpTransportRequire({
     }
 }));
 
-const User = require("./models/User");
-const Record = require("./models/Record");
+const User = require("./models/User"); //MODELO DE USUARIO EN BASE DE DATOS
 
-passport.use(new LocalStrategy({
+passport.use(new LocalStrategy({ //ESTRATEGIA PARA AUTENTICAR AL USUARIO
     usernameField: 'email',
     passwordField: 'password'
 }, function (email, password, done) {
-    User.findOne({
+    User.findOne({ //BUSCAR EN BASE DE DATOS EL CORREO ELECTRÓNICO
         email: email
     }).then(function (user) {
         if (!user) {
@@ -93,7 +89,7 @@ passport.use(new LocalStrategy({
                 message: 'Usuario incorrecto.'
             });
         }
-        user.validatePassword(password, function validationResult(isValid) {
+        user.validatePassword(password, function validationResult(isValid) { //VALIDAR LA CONTRASEÑA.
             if (!isValid) {
                 return done(null, false, {
                     message: 'Contraseña incorrecta.'
@@ -110,16 +106,17 @@ passport.use(new LocalStrategy({
     });
 }));
 
-passport.serializeUser(function (user, done) {
+passport.serializeUser(function (user, done) { //FUNCIÓN ENCARGADA DE GUARDAR LA SESIÓN DEL USUARIO.
     done(null, user._id);
 });
 
-passport.deserializeUser(function (userId, done) {
+passport.deserializeUser(function (userId, done) { //FUNCIÓN ENCARGADA DE OBTENER LA SESIÓN DEL USUARIO.
     User.findById(userId, function (err, user) {
         done(err, user);
     });
 });
 
+//CONFIGURACIÓN DE CONEXIÓN A BASE DE DATOS DE MONGODB
 const mongooseOptions = {
     user: process.env.DB_USERNAME,
     pass: process.env.DB_PASSWORD,
@@ -128,56 +125,36 @@ const mongooseOptions = {
     autoReconnect: true
 }
 
-mongoose.connect("mongodb://" + process.env.DB_URL + "/mipecera", mongooseOptions);
-const db = mongoose.connection;
+mongoose.connect("mongodb://" + process.env.DB_URL + "/mipecera", mongooseOptions); //CONECTAR A BASE DE DATOS
 
-db.once('open', function () {
-    console.log(" - Connected to MongoDB :) " + process.env.DB_URL);
-});
-
-db.once('error', function (e) {
-    console.log(" - DB Error: " + e);
-    mongoose.disconnect();
-});
-
-db.on('reconnected', function () {
-    console.log('MongoDB reconnected!');
-});
-
-db.on('disconnected', function () {
-    console.log('MongoDB disconnected!');
-});
-
-//EXPRESS MIDDLEWARE SETUP
-app.use(express.static('public'));
-app.set('views', __dirname + '/views/');
-app.engine('html', ejs.renderFile);
-app.set('view engine', 'ejs');
-app.use(flash());
-app.use(bodyParser.urlencoded({
+//CONFIGURACIÓN DE EXPRESS MIDDLEWARE
+app.use(express.static('public')); //CARPETA DE ACCESO PUBLICO (.JS, .CSS, IMAGENES, ETC.).
+app.set('views', __dirname + '/views/'); //CARPETA CON LAS VISTAS HTML PARA USAR
+app.engine('html', ejs.renderFile); //INICIALIZACIÓN DE LA LIBRERÍA QUE VA A RENDERIZAR LAS VISTAS
+app.set('view engine', 'ejs'); //CONFIGURACIÓN DE LA LIBRERÍA QUE VA A RENDERIZAR LAS VISTAS
+app.use(flash()); //INCIALIZAR LA LIBRERÍA GESTORA DE ALERTAS EN HTML
+app.use(bodyParser.urlencoded({ //LIBRERÍA QUE VALIDA LOS DATOS ENVIADOS EN FORMULARIOS
     extended: true,
 }));
 
-const customSession = session({
+const customSession = session({ //CONFIGURACIÓN DE LA COOKIE DE SESIÓN DE USUARIO.
     secret: process.env.TOKEN_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 2592000000,
+        maxAge: 2592000000, //TIEMPO DE VIDA DE LA SESIÓN  => 1 MES
     },
     store: new MongoStore({
-        mongooseConnection: db
+        mongooseConnection: mongoose.connection
     })
 });
-
+//CONFIGURACIÓN DELA SESIÓN DE USUARIO
 app.use(customSession);
 app.use(passport.initialize());
 app.use(passport.session());
 
-io.on("connection", socket => {
 
-});
-
+//FUNCIÓN DE MIDDLEWARE PARA EXPRESS.JS ENCARGADA DE REVISAR QUE LA REQUEST HTTP SEA DE UN USUARIO QUE HAYA INICIADO SESIÓN.
 function requireAuthentication(req, res, next) {
     if (!req.isAuthenticated()) {
         req.session.returnTo = req.url;
@@ -188,7 +165,7 @@ function requireAuthentication(req, res, next) {
     }
 };
 
-app.get('/login', function (req, res) {
+app.get('/login', function (req, res) { //RUTA LOGIN PARA INCIAR SESIÓN. O CREAR EL NUEVO USUARIO SI NO EXISTE NINGUNO AÚN.
     User.countDocuments().then(userCount => {
         if (userCount > 0) {
             res.render(__dirname + '/views/authentication/login.html', {
@@ -207,14 +184,14 @@ app.get('/login', function (req, res) {
     });
 });
 
-app.post('/login', passport.authenticate('local', {
+app.post('/login', passport.authenticate('local', { //POST HTTP LOGIN. RECIBE PARAMETROS DE INICIO DE SESIÓN (USUARIO Y CONTRASEÑA) Y LOS VALIDA.
     successRedirect: '/',
     successReturnToOrRedirect: "/",
     failureRedirect: '/login',
     failureFlash: true
 }));
 
-app.post('/user', (req, res) => {
+app.post('/user', (req, res) => { //POST HTTP USER. RECIBE LA INFORMACIÓN PARA LA CREACIÓN DE UN NUEVO USUARIO.
     User.countDocuments().then(userCount => {
         if (userCount > 0) {
             res.status(500);
@@ -226,43 +203,54 @@ app.post('/user', (req, res) => {
             });
         }
     }, error => {
-        console.log(error);
         res.status(500);
         return res.sendFile(__dirname + '/views/http_errors/500.html');
     });
 });
 
-function updateLastRecord(sensorData) {
-    if (sensorData.P && sensorData.T && sensorData.F) {
-        lastRecord.ph = parseFloat(sensorData.P)
-        lastRecord.temp = parseFloat(sensorData.T)
+app.get('/data', function (req, res) {
+    newLog("<b>DISPOSITIVO: " + JSON.stringify(req.query) + "</b>");
+
+    if (req.query.P && req.query.T && req.query.F) {
+        lastRecord.ph = parseFloat(req.query.P);
+        lastRecord.temp = parseFloat(req.query.T);
         lastRecord.date = moment(new Date()).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
-        let lastFeed = moment.tz(sensorData.F, "YYYYMMDDHHmm", "America/Guatemala")
+        let lastFeed = moment.tz(req.query.F, "YYYYMMDDHHmm", "America/Guatemala")
         lastRecord.lastFeed = moment(lastFeed).tz('America/Guatemala').format("DD/MMM/YYYY HH:mm");
         io.emit("newRecord", lastRecord);
-        if (sensorData.M == "1") {
+
+        if (lastRecord.ph < currentSettings.ph.min || lastRecord.ph > currentSettings.ph.max) {
+            sendPhAlertMail(lastRecord.ph);
+        }
+
+        if (lastRecord.temp < currentSettings.temp.min || lastRecord.temp > currentSettings.temp.max) {
+            sendPhAlertMail(lastRecord.temp);
+        }
+
+        if (req.query.M == "1") {
+            mustFeed = false;
+            sendManualFeedMail();
+        }
+
+        if (req.query.A == "1") {
+            sendAutoFeedMail();
             mustFeed = false;
         }
     }
-}
 
-app.get('/data', function (req, res) {
-    newLog("<b>HTTP Device: " + JSON.stringify(req.query) + "</b>");
-    updateLastRecord(req.query);
-
+    //QUITAR TODOS LOS HEADERS PARA EVITAR ENVIAR DATOS NO NECESARIOS AL DISPOSITIVO.
     res.removeHeader('Content-Type');
     res.removeHeader('X-Powered-By');
     res.removeHeader('Content-Length');
     res.removeHeader('Transfer-Encoding');
     res.removeHeader('ETag');
     res.removeHeader('Date');
-
     res.removeHeader('Connection');
 
-    if (mustFeed) {
+    if (mustFeed) { //SI LA VARIABLE ES true, ENVIAR EL COMANDO PARA ALIMENTAR MANUALMENTE.
         res.end("FEED");
         newLog("FEED");
-    } else {
+    } else { //REVISAR QUE LA CONFIGURACIÓN DE ALIMENTACIÓN AUTOMÁTICA QUE ENVIÓ EL DISPOSITIVO SEA LA MISMA QUE ESTÁ CONFIGURADA EN EL SERVIDOR
         let feedString = ""
         currentSettings.feedSchedule.h00 ? feedString += "Y" : feedString += "0";
         currentSettings.feedSchedule.h01 ? feedString += "Y" : feedString += "0";
@@ -290,26 +278,27 @@ app.get('/data', function (req, res) {
         currentSettings.feedSchedule.h23 ? feedString += "Y" : feedString += "0";
 
         if (req.query.S != feedString) {
+            //SI LA CONFIGURACIÓN DE ALIMENTACIÓN AUTOMÁTICA ES DISTINTA, HAY QUE ENVIARLE LA CADENA AL DISPOSITIVO, JUNTO CON LA HORA Y FECHA PARA QUE SE SINCRONICE.
             let replyDate = moment(new Date()).tz('America/Guatemala').format("YYYYMMDDHHmmss");
-            res.end("TIME=" + feedString + "" + replyDate);
-            newLog("Server: TIME=" + feedString + "CLK=" + replyDate);
+            res.end("TIME=" + feedString + replyDate);
+            newLog("Server: TIME=" + feedString + replyDate);
+
         } else {
+            //SI LA CONFIGURACIÓN ESTA CORRECTA Y NO HAY QUE ALIEMTNAR MANUALMENTE, ENVIAR OK
             newLog("OK");
             res.end("OK");
         }
-
     }
-
 });
 
-app.get('/logout', function (req, res) {
+app.get('/logout', function (req, res) { //RUTA ENCARGADA DE CERRAR SESIÓN.
     if (req.isAuthenticated()) {
         req.logout();
     }
     res.redirect('/login');
 });
 
-app.get('/', requireAuthentication, function (req, res) {
+app.get('/', requireAuthentication, function (req, res) { //RUTA QUE MUESTRA EL DASHBOARD
     return res.render(__dirname + '/views/dashboard.html', {
         message: req.flash('message'),
         error: req.flash('error'),
@@ -317,14 +306,13 @@ app.get('/', requireAuthentication, function (req, res) {
     });
 });
 
-app.get('/feed', requireAuthentication, function (req, res) {
+app.get('/feed', requireAuthentication, function (req, res) { //RUTA PARA EJECUTAR UNA ALIMENTACIÓN AUTOMÁTICA
     mustFeed = true;
     req.flash('message', "Se enviará el comando a la pecera.");
     res.redirect('/');
 });
 
-
-app.get('/settings', requireAuthentication, function (req, res) {
+app.get('/settings', requireAuthentication, function (req, res) { //RUTA QUE MUESTRA LA VISTA DE CONFIGURACIÓN DE ALERTAS Y ALIMENTACIÓN AUTOMÁTICA.
     return res.render(__dirname + '/views/settings.html', {
         message: req.flash('message'),
         error: req.flash('error'),
@@ -334,6 +322,7 @@ app.get('/settings', requireAuthentication, function (req, res) {
 });
 
 app.post('/settings', requireAuthentication, function (req, res) {
+    //POST HTTP, RECIBE LOS PARAMETROS PARA ACTUALIZAR LA CONFIGURACION DE ALERTAS Y ALIMENTACIÓN AUTOMÁTICA.
 
     currentSettings.temp.min = parseFloat(req.body.temp.min);
     currentSettings.temp.max = parseFloat(req.body.temp.max);
@@ -370,16 +359,15 @@ app.post('/settings', requireAuthentication, function (req, res) {
     res.redirect('/settings');
 });
 
-app.get('/monitor', function (req, res) {
+app.get('/monitor', function (req, res) { //RUTA QUE MUESTRA EL MONITOR DE COMUNICACIÓN ENTRE EL SERVIDOR Y EL DISPOSITIVO DE LA PECERA.
     return res.sendFile(__dirname + '/views/monitor.html');
 });
 
-app.get('*', function (req, res) {
+app.get('*', function (req, res) { //GESTOR DE ERRORES DE ARCHIVO NO ENCONTRADO 404.
     return res.sendFile(__dirname + '/views/http_errors/404.html');
 });
 
-app.use((err, req, res, next) => {
-    console.log(err);
+app.use((err, req, res, next) => { //GESTOR DE ERRORES DE SERVIDOR (500).
     if (res.headersSent) {
         return next(err)
     } else {
@@ -388,14 +376,94 @@ app.use((err, req, res, next) => {
     }
 });
 
-function newLog(log) {
-    io.emit("newLog", log)
+function newLog(log) { //ENVÍA LA CADENA DE DATOS DEL PARAMETRO (log) POR WEBSOCKET PARA MOSTRARLO EN EL MONITOR
+    io.emit("newLog", log);
 }
 
-http.listen(HTTP_PORT, function () {
+function sendAutoFeedMail() {
+    var mailOptions = {
+        from: '"mipecera.online" <' + process.env.EMAIL_USER + '>',
+        to: [process.env.EMAIL_USER],
+        subject: "Alimentación Automática",
+        text: "Se ha realizado una alimentación automática.\n\nFecha: " + moment(new Date()).tz('America/Guatemala').format("DD-MM-YYYY HH:mm") + "\n\n",
+    }
+
+    smtpTransport.sendMail(mailOptions, (error, response) => {
+        if (error) {
+            console.log("Message Not Send", error);
+        } else {
+            console.log("Mail Send", );
+        }
+    });
+}
+
+function sendManualFeedMail() {
+    var mailOptions = {
+        from: '"mipecera.online" <' + process.env.EMAIL_USER + '>',
+        to: [process.env.EMAIL_USER],
+        subject: "Alimentación Manual",
+        text: "Se ha realizado una alimentación manual.\n\nFecha: " + moment(new Date()).tz('America/Guatemala').format("DD-MM-YYYY HH:mm") + "\n\n",
+    }
+
+    smtpTransport.sendMail(mailOptions, (error, response) => {
+        if (error) {
+            console.log("Message Not Send", error);
+        } else {
+            console.log("Mail Send", );
+        }
+    });
+}
+
+var lastPhAlertMail = new Date(0);
+
+function sendPhAlertMail(ph) {
+    if (new Date().getTime() - lastPhAlertMail.getTime() > 3600000) {
+        lastPhAlertMail = new Date();
+        var mailOptions = {
+            from: '"mipecera.online" <' + process.env.EMAIL_USER + '>',
+            to: [process.env.EMAIL_USER],
+            subject: "pH no Saludable",
+            text: "Se ha reportado un valor de pH no Saludable.\n\npH: " + ph + "\n\nFecha: " + moment(new Date()).tz('America/Guatemala').format("DD-MM-YYYY HH:mm") + "\n\n",
+        }
+
+        smtpTransport.sendMail(mailOptions, (error, response) => {
+            if (error) {
+                console.log("Message Not Send", error);
+            } else {
+                console.log("Mail Send", );
+            }
+        });
+    }
+
+}
+
+var lastTempAlertMail = new Date(0);
+
+function sendTempAlertMail(temp) {
+    if (new Date().getTime() - lastTempAlertMail.getTime() > 3600000) {
+        lastTempAlertMail = new Date();
+        var mailOptions = {
+            from: '"mipecera.online" <' + process.env.EMAIL_USER + '>',
+            to: [process.env.EMAIL_USER],
+            subject: "Temperatura no saludable",
+            text: "Se ha reportado un valor de Temperatura no Saludable.\n\nTemperatura: " + temp + "\n\nFecha: " + moment(new Date()).tz('America/Guatemala').format("DD-MM-YYYY HH:mm") + "\n\n",
+        }
+
+        smtpTransport.sendMail(mailOptions, (error, response) => {
+            if (error) {
+                console.log("Message Not Send", error);
+            } else {
+                console.log("Mail Send", );
+            }
+        });
+    }
+}
+
+http.listen(HTTP_PORT, function () { //INICIO DEL SERVIDOR HTTP
     console.log(" - Web Server Started :)");
 });
 
+//GESTIÓN DE ERRORES
 process.on("uncaughtException", function (err) {
     console.log("uncaughtException", err);
 });
