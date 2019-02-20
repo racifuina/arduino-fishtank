@@ -1,0 +1,14 @@
+Primeros pasos con ESP8266
+https://medium.com/@aallan/getting-started-with-the-esp8266-270e30feb4d1
+
+Información de los Comandos AT
+https://github.com/espressif/ESP8266_AT/wiki
+
+Resolución de problemas de comunicación con ESP8266
+https://www.esp8266.com/viewtopic.php?f=32&t=10443
+
+Cambiarle el BAUD RATE al ESP8266
+http://help.blynk.cc/how-to-connect-different-hardware-with-blynk/arduino/esp8266-with-at-firmware
+
+AUMENTAR EL BUFFER DE RX EN ARDUINO
+https://internetofhomethings.com/homethings/?p=927
