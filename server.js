@@ -224,7 +224,7 @@ app.get('/data', function (req, res) {
         }
 
         if (lastRecord.temp < currentSettings.temp.min || lastRecord.temp > currentSettings.temp.max) {
-            sendPhAlertMail(lastRecord.temp);
+            sendTempAlertMail(lastRecord.temp);
         }
 
         if (req.query.M == "1") {
