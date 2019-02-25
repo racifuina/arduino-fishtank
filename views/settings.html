@@ -65,6 +65,19 @@
             background-color: #fff;
             border-color: #ccc;
         }
+        .score-hint-input:focus {
+            outline: none;
+        }
+
+        .score-hint-input {
+            background: transparent;
+            border: none;
+            width: 100%;
+            height: 34px;
+            font-size: 14px;
+            color: #555;
+            border-bottom: solid 1px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
 
@@ -82,6 +95,7 @@
             </div>
             <div class="collapse navbar-collapse" id="navbar-options">
                 <ul class="nav navbar-nav navbar-right">
+                    <li><a href="/monitor">Monitor</a></li>
                     <li class="active"><a>Configuración</a></li>
                     <li><a href="/logout" style="color: orangered;">Cerrar sesión</a></li>
                 </ul>
@@ -119,11 +133,11 @@
                         <div class="panel-body">
                             <div class="form-group floating-label-form-group floating-label-form-group-with-value">
                                 <label for="min" class="titulo">Temperatura mínima</label>
-                                <input required type="text" name="temp[min]" class="form-control" autocomplete="off" value="<%= currentSettings.temp.min %>"/>
+                                <input required type="text" name="temp[min]" class="form-control" autocomplete="off" value="<%= currentSettings.temp.min %>" />
                             </div>
                             <div class="form-group floating-label-form-group floating-label-form-group-with-value">
                                 <label for="min" class="titulo">Temperatura máxima</label>
-                                <input required type="text" name="temp[max]" class="form-control" autocomplete="off" value="<%= currentSettings.temp.max %>"/>
+                                <input required type="text" name="temp[max]" class="form-control" autocomplete="off" value="<%= currentSettings.temp.max %>" />
                             </div>
                         </div>
                     </div>
@@ -136,11 +150,11 @@
                         <div class="panel-body">
                             <div class="form-group floating-label-form-group floating-label-form-group-with-value">
                                 <label for="min" class="titulo">pH mínimo</label>
-                                <input required type="text" name="ph[min]" class="form-control" autocomplete="off" value="<%= currentSettings.ph.min %>"/>
+                                <input required type="text" name="ph[min]" class="form-control" autocomplete="off" value="<%= currentSettings.ph.min %>" />
                             </div>
                             <div class="form-group floating-label-form-group floating-label-form-group-with-value">
                                 <label for="min" class="titulo">pH máximo</label>
-                                <input required type="text" name="ph[max]" class="form-control" autocomplete="off" value="<%= currentSettings.ph.max %>"/>
+                                <input required type="text" name="ph[max]" class="form-control" autocomplete="off" value="<%= currentSettings.ph.max %>" />
                             </div>
                         </div>
                     </div>
@@ -500,11 +514,31 @@
             </div>
 
             <div class="row">
+                <div class="col-xs-12" id="limpieza-hints">
+                    <label>Direcciones de correo electrónico para alertas</label>
+                    <!--<% for(var index = 0; index < currentSettings.alertEmails.length; index++) { %>-->
+                    <!--<%      if (index == 0) {%>-->
+                    <input type="email" placeholder="Agrega un correo electrónico" class="score-hint-input first-hint" onkeyup="onKeyUpInputs(event)" required name="alertEmails" value="<%= currentSettings.alertEmails[index] %>" autocomplete="off">
+                    <!--<%      } else {%>-->
+                    <input type="email" placeholder="Agrega un correo electrónico" class="score-hint-input" onkeyup="onKeyUpInputs(event)" name="alertEmails" value="<%= currentSettings.alertEmails[index] %>" autocomplete="off">
+                    <!--<%      }%>-->
+                    <!--<% }%>-->
+                    <input type="email" placeholder="Agrega un correo electrónico" class="score-hint-input first-hint" onkeyup="onKeyUpInputs(event)" name="alertEmails" value="<%= currentSettings.alertEmails[index] %>" autocomplete="off">
+                </div>
+
+            </div>
+
+
+            <div class="row">
+                <br>
                 <div class="col-xs-12">
                     <div class='col-xs-12 col-sm-offset-3 col-sm-6 col-md-offset-2 col-md-8 col-lg-offset-1 col-lg-10'>
                         <input type="submit" class="btn btn-success btn-block" value="Guardar">
                     </div>
                 </div>
+                <br>
+                <br>
+                <br>
             </div>
 
         </form>
@@ -512,6 +546,40 @@
 
     <script src="/js/libs/jquery.min.js"></script>
     <script src="/js/libs/bootstrap.js"></script>
+    <script>
+        $(document).ready(function() {
+            $(window).keydown(function(event) {
+                if (event.keyCode == 13) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+        });
+
+        function onKeyUpInputs(e) {
+            if (e.keyCode == 13) {
+                var nuevoRow = $('<input type="email" placeholder="Agrega un correo electrónico" class="score-hint-input" onkeyup="onKeyUpInputs(event)" autocomplete="off" name="alertEmails">');
+                $(e.currentTarget).after(nuevoRow);
+                nuevoRow.focus()
+            }
+            if (e.keyCode == 38) {
+                $(e.currentTarget).prev().focus();
+            }
+            if (e.keyCode == 40) {
+                $(e.currentTarget).next().focus();
+            }
+            if (e.keyCode == 8) {
+                if ($(e.currentTarget).val().length < 1) {
+                    if (!$(e.currentTarget).hasClass("first-hint")) {
+                        $(e.currentTarget).prev().focus();
+                        $(e.currentTarget).remove();
+                    }
+
+                }
+            }
+        }
+
+    </script>
 
 </body>
 

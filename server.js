@@ -57,7 +57,8 @@ let currentSettings = { //CONFIGURACION DE ALIMENTACIÓN AUTOMÁTICA Y DE ENVÍO
     temp: {
         min: 15,
         max: 35
-    }
+    },
+    alertEmails: [process.env.EMAIL_USER]
 };
 
 let lastRecord = { //ÚLTIMO REGISTRO ENVIADO POR EL DISPOSITIVO
@@ -324,6 +325,8 @@ app.get('/settings', requireAuthentication, function (req, res) { //RUTA QUE MUE
 app.post('/settings', requireAuthentication, function (req, res) {
     //POST HTTP, RECIBE LOS PARAMETROS PARA ACTUALIZAR LA CONFIGURACION DE ALERTAS Y ALIMENTACIÓN AUTOMÁTICA.
 
+    currentSettings.alertEmails = req.body.alertEmails.filter(word => word.length > 1);
+
     currentSettings.temp.min = parseFloat(req.body.temp.min);
     currentSettings.temp.max = parseFloat(req.body.temp.max);
 
@@ -383,7 +386,7 @@ function newLog(log) { //ENVÍA LA CADENA DE DATOS DEL PARAMETRO (log) POR WEBSO
 function sendAutoFeedMail() {
     var mailOptions = {
         from: '"mipecera.online" <' + process.env.EMAIL_USER + '>',
-        to: [process.env.EMAIL_USER],
+        to: [currentSettings.alertEmails],
         subject: "Alimentación Automática",
         text: "Se ha realizado una alimentación automática.\n\nFecha: " + moment(new Date()).tz('America/Guatemala').format("DD-MM-YYYY HH:mm") + "\n\n",
     }
@@ -400,7 +403,7 @@ function sendAutoFeedMail() {
 function sendManualFeedMail() {
     var mailOptions = {
         from: '"mipecera.online" <' + process.env.EMAIL_USER + '>',
-        to: [process.env.EMAIL_USER],
+        to: [currentSettings.alertEmails],
         subject: "Alimentación Manual",
         text: "Se ha realizado una alimentación manual.\n\nFecha: " + moment(new Date()).tz('America/Guatemala').format("DD-MM-YYYY HH:mm") + "\n\n",
     }
@@ -421,7 +424,7 @@ function sendPhAlertMail(ph) {
         lastPhAlertMail = new Date();
         var mailOptions = {
             from: '"mipecera.online" <' + process.env.EMAIL_USER + '>',
-            to: [process.env.EMAIL_USER],
+            to: [currentSettings.alertEmails],
             subject: "pH no Saludable",
             text: "Se ha reportado un valor de pH no Saludable.\n\npH: " + ph + "\n\nFecha: " + moment(new Date()).tz('America/Guatemala').format("DD-MM-YYYY HH:mm") + "\n\n",
         }
@@ -444,7 +447,7 @@ function sendTempAlertMail(temp) {
         lastTempAlertMail = new Date();
         var mailOptions = {
             from: '"mipecera.online" <' + process.env.EMAIL_USER + '>',
-            to: [process.env.EMAIL_USER],
+            to: [currentSettings.alertEmails],
             subject: "Temperatura no saludable",
             text: "Se ha reportado un valor de Temperatura no Saludable.\n\nTemperatura: " + temp + "\n\nFecha: " + moment(new Date()).tz('America/Guatemala').format("DD-MM-YYYY HH:mm") + "\n\n",
         }
