@@ -12,3 +12,11 @@ http://help.blynk.cc/how-to-connect-different-hardware-with-blynk/arduino/esp826
 
 AUMENTAR EL BUFFER DE RX EN ARDUINO
 https://internetofhomethings.com/homethings/?p=927
+
+Cambios
+
+* Agregar link a monitor
+crear bitacora 
+* agregar listado de correos electrónicos
+* corregir login
+precios de componentes
