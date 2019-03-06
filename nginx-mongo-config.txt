@@ -29,3 +29,16 @@ server {
 mongo admin --eval 'db.createUser({user: "dbadmin",pwd: "kgfh8g87hs89g2g",roles: [{role: "root",db: "admin"}]});'
 
 mongo mipecera --authenticationDatabase admin -u dbadmin -p kgfh8g87hs89g2g --eval 'db.createUser({user: "webapp@mipecera.online",pwd: "mnbhubt8pahñb9a34",roles: [{role: "readWrite",db: "mipecera"}]});'
+
+server {
+    listen 80;
+    server_name 3.87.250.63;
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
